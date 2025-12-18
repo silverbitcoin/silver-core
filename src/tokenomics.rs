@@ -25,39 +25,36 @@ pub const TOTAL_SUPPLY_MIST: u128 = (TOTAL_SUPPLY_SBTC as u128) * (MIST_PER_SBTC
 /// Token allocation category
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AllocationCategory {
-    /// Validator Rewards - 490M SBTC (49%)
-    ValidatorRewards,
-    /// Presale/Public - 100M SBTC (10%)
+    /// Mining Rewards - 500M SBTC (50%) - Emitted via PoW mining over 20 years
+    MiningRewards,
+    /// Presale/Public - 150M SBTC (15%)
     PresalePublic,
     /// Team & Advisors - 100M SBTC (10%)
     TeamAdvisors,
-    /// Foundation - 90M SBTC (9%)
+    /// Foundation - 100M SBTC (10%)
     Foundation,
-    /// Community Reserve - 80M SBTC (8%)
+    /// Community Reserve - 50M SBTC (5%)
     CommunityReserve,
-    /// Early Investors - 60M SBTC (6%)
-    EarlyInvestors,
-    /// Ecosystem Fund - 60M SBTC (6%)
+    /// Ecosystem Fund - 50M SBTC (5%)
     EcosystemFund,
-    /// Airdrop - 10M SBTC (1%)
+    /// Early Investors - 30M SBTC (3%)
+    EarlyInvestors,
+    /// Airdrop - 20M SBTC (2%)
     Airdrop,
-    /// Validators - 10M SBTC (1%)
-    Validators,
 }
 
 impl AllocationCategory {
     /// Get the allocation amount in SBTC
     pub fn amount_sbtc(&self) -> u64 {
         match self {
-            AllocationCategory::ValidatorRewards => 490_000_000,
-            AllocationCategory::PresalePublic => 100_000_000,
+            AllocationCategory::MiningRewards => 500_000_000,
+            AllocationCategory::PresalePublic => 150_000_000,
             AllocationCategory::TeamAdvisors => 100_000_000,
-            AllocationCategory::Foundation => 90_000_000,
-            AllocationCategory::CommunityReserve => 80_000_000,
-            AllocationCategory::EarlyInvestors => 60_000_000,
-            AllocationCategory::EcosystemFund => 60_000_000,
-            AllocationCategory::Airdrop => 10_000_000,
-            AllocationCategory::Validators => 10_000_000,
+            AllocationCategory::Foundation => 100_000_000,
+            AllocationCategory::CommunityReserve => 50_000_000,
+            AllocationCategory::EcosystemFund => 50_000_000,
+            AllocationCategory::EarlyInvestors => 30_000_000,
+            AllocationCategory::Airdrop => 20_000_000,
         }
     }
 
@@ -69,55 +66,52 @@ impl AllocationCategory {
     /// Get the vesting period in years
     pub fn vesting_years(&self) -> u32 {
         match self {
-            AllocationCategory::ValidatorRewards => 20,
-            AllocationCategory::PresalePublic => 4,
+            AllocationCategory::MiningRewards => 20,
+            AllocationCategory::PresalePublic => 2,
             AllocationCategory::TeamAdvisors => 4,
             AllocationCategory::Foundation => 5,
-            AllocationCategory::CommunityReserve => 5,
-            AllocationCategory::EarlyInvestors => 2,
+            AllocationCategory::CommunityReserve => 3,
             AllocationCategory::EcosystemFund => 5,
-            AllocationCategory::Airdrop => 2,
-            AllocationCategory::Validators => 0,
+            AllocationCategory::EarlyInvestors => 2,
+            AllocationCategory::Airdrop => 1,
         }
     }
 
     /// Get the cliff period in months
     pub fn cliff_months(&self) -> u32 {
         match self {
-            AllocationCategory::ValidatorRewards => 0,
+            AllocationCategory::MiningRewards => 0,
             AllocationCategory::PresalePublic => 0,
             AllocationCategory::TeamAdvisors => 12,
             AllocationCategory::Foundation => 0,
             AllocationCategory::CommunityReserve => 0,
-            AllocationCategory::EarlyInvestors => 6,
             AllocationCategory::EcosystemFund => 0,
+            AllocationCategory::EarlyInvestors => 6,
             AllocationCategory::Airdrop => 0,
-            AllocationCategory::Validators => 0,
         }
     }
 
     /// Get description
     pub fn description(&self) -> &'static str {
         match self {
-            AllocationCategory::ValidatorRewards => {
-                "Validator Rewards - 20 year emission schedule"
+            AllocationCategory::MiningRewards => {
+                "Mining Rewards - 20 year emission via PoW mining (SHA-512)"
             }
-            AllocationCategory::PresalePublic => "Presale/Public - Multi-stage token sale",
+            AllocationCategory::PresalePublic => "Presale/Public - Token sale allocation",
             AllocationCategory::TeamAdvisors => {
                 "Team & Advisors - 4 years vesting with 1 year cliff"
             }
             AllocationCategory::Foundation => "Foundation - Operations and development",
             AllocationCategory::CommunityReserve => {
-                "Community Reserve - Gradual distribution over 5 years"
-            }
-            AllocationCategory::EarlyInvestors => {
-                "Early Investors - 2 years vesting with 6 month cliff"
+                "Community Reserve - Gradual distribution over 3 years"
             }
             AllocationCategory::EcosystemFund => {
                 "Ecosystem Fund - Developer grants and partnerships over 5 years"
             }
-            AllocationCategory::Airdrop => "Airdrop - Community distribution over 2 years",
-            AllocationCategory::Validators => "Validators - Immediate allocation for operations",
+            AllocationCategory::EarlyInvestors => {
+                "Early Investors - 2 years vesting with 6 month cliff"
+            }
+            AllocationCategory::Airdrop => "Airdrop - Community distribution over 1 year",
         }
     }
 }
@@ -277,28 +271,28 @@ impl TokenomicsConfig {
     pub fn default() -> Self {
         let mut allocations = HashMap::new();
 
-        // Validator Rewards - 490M SBTC (49%)
+        // Mining Rewards - 500M SBTC (50%)
         allocations.insert(
-            "validator_rewards".to_string(),
+            "mining_rewards".to_string(),
             AllocationInfo {
-                category: "Validator Rewards".to_string(),
-                amount_sbtc: 490_000_000,
-                percentage: 49.0,
-                vesting: VestingSchedule::new(490_000_000, 20, 0),
-                description: AllocationCategory::ValidatorRewards
+                category: "Mining Rewards".to_string(),
+                amount_sbtc: 500_000_000,
+                percentage: 50.0,
+                vesting: VestingSchedule::new(500_000_000, 20, 0),
+                description: AllocationCategory::MiningRewards
                     .description()
                     .to_string(),
             },
         );
 
-        // Presale/Public - 100M SBTC (10%)
+        // Presale/Public - 150M SBTC (15%)
         allocations.insert(
             "presale_public".to_string(),
             AllocationInfo {
                 category: "Presale/Public".to_string(),
-                amount_sbtc: 100_000_000,
-                percentage: 10.0,
-                vesting: VestingSchedule::new(100_000_000, 4, 0),
+                amount_sbtc: 150_000_000,
+                percentage: 15.0,
+                vesting: VestingSchedule::new(150_000_000, 2, 0),
                 description: AllocationCategory::PresalePublic.description().to_string(),
             },
         );
@@ -315,77 +309,65 @@ impl TokenomicsConfig {
             },
         );
 
-        // Foundation - 90M SBTC (9%)
+        // Foundation - 100M SBTC (10%)
         allocations.insert(
             "foundation".to_string(),
             AllocationInfo {
                 category: "Foundation".to_string(),
-                amount_sbtc: 90_000_000,
-                percentage: 9.0,
-                vesting: VestingSchedule::new(90_000_000, 5, 0),
+                amount_sbtc: 100_000_000,
+                percentage: 10.0,
+                vesting: VestingSchedule::new(100_000_000, 5, 0),
                 description: AllocationCategory::Foundation.description().to_string(),
             },
         );
 
-        // Community Reserve - 80M SBTC (8%)
+        // Community Reserve - 50M SBTC (5%)
         allocations.insert(
             "community_reserve".to_string(),
             AllocationInfo {
                 category: "Community Reserve".to_string(),
-                amount_sbtc: 80_000_000,
-                percentage: 8.0,
-                vesting: VestingSchedule::new(80_000_000, 5, 0),
+                amount_sbtc: 50_000_000,
+                percentage: 5.0,
+                vesting: VestingSchedule::new(50_000_000, 3, 0),
                 description: AllocationCategory::CommunityReserve
                     .description()
                     .to_string(),
             },
         );
 
-        // Early Investors - 60M SBTC (6%)
-        allocations.insert(
-            "early_investors".to_string(),
-            AllocationInfo {
-                category: "Early Investors".to_string(),
-                amount_sbtc: 60_000_000,
-                percentage: 6.0,
-                vesting: VestingSchedule::new(60_000_000, 2, 6),
-                description: AllocationCategory::EarlyInvestors.description().to_string(),
-            },
-        );
-
-        // Ecosystem Fund - 60M SBTC (6%)
+        // Ecosystem Fund - 50M SBTC (5%)
         allocations.insert(
             "ecosystem_fund".to_string(),
             AllocationInfo {
                 category: "Ecosystem Fund".to_string(),
-                amount_sbtc: 60_000_000,
-                percentage: 6.0,
-                vesting: VestingSchedule::new(60_000_000, 5, 0),
+                amount_sbtc: 50_000_000,
+                percentage: 5.0,
+                vesting: VestingSchedule::new(50_000_000, 5, 0),
                 description: AllocationCategory::EcosystemFund.description().to_string(),
             },
         );
 
-        // Airdrop - 10M SBTC (1%)
+        // Early Investors - 30M SBTC (3%)
+        allocations.insert(
+            "early_investors".to_string(),
+            AllocationInfo {
+                category: "Early Investors".to_string(),
+                amount_sbtc: 30_000_000,
+                percentage: 3.0,
+                vesting: VestingSchedule::new(30_000_000, 2, 6),
+                description: AllocationCategory::EarlyInvestors.description().to_string(),
+            },
+        );
+
+        // Airdrop - 20M SBTC (2%)
         allocations.insert(
             "airdrop".to_string(),
             AllocationInfo {
                 category: "Airdrop".to_string(),
-                amount_sbtc: 10_000_000,
-                percentage: 1.0,
-                vesting: VestingSchedule::new(10_000_000, 2, 0),
+                amount_sbtc: 20_000_000,
+                percentage: 2.0,
+                vesting: VestingSchedule::new(20_000_000, 1, 0),
                 description: AllocationCategory::Airdrop.description().to_string(),
-            },
-        );
-
-        // Validators - 10M SBTC (1%)
-        allocations.insert(
-            "validators".to_string(),
-            AllocationInfo {
-                category: "Validators".to_string(),
-                amount_sbtc: 10_000_000,
-                percentage: 1.0,
-                vesting: VestingSchedule::new(10_000_000, 0, 0),
-                description: AllocationCategory::Validators.description().to_string(),
             },
         );
 

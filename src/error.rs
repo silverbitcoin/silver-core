@@ -25,29 +25,17 @@ pub enum Error {
     #[error("Cryptographic error: {0}")]
     Cryptographic(String),
 
-    /// Invalid vesting amount
-    #[error("Invalid vesting amount: must be greater than 0")]
-    InvalidVestingAmount,
+    /// Insufficient balance
+    #[error("Insufficient balance: {0}")]
+    InsufficientBalance(String),
 
-    /// Invalid vesting period
-    #[error("Invalid vesting period: must be greater than 0")]
-    InvalidVestingPeriod,
+    /// Invalid transaction
+    #[error("Invalid transaction: {0}")]
+    InvalidTransaction(String),
 
-    /// Vesting schedule already exists
-    #[error("Vesting schedule already exists for this address")]
-    VestingScheduleAlreadyExists,
-
-    /// Vesting schedule not found
-    #[error("Vesting schedule not found for this address")]
-    VestingScheduleNotFound,
-
-    /// Insufficient vested balance
-    #[error("Insufficient vested balance: {0}")]
-    InsufficientVestedBalance(String),
-
-    /// Locked tokens cannot be transferred
-    #[error("Cannot transfer locked tokens")]
-    LockedTokensCannotBeTransferred,
+    /// Invalid block
+    #[error("Invalid block: {0}")]
+    InvalidBlock(String),
 }
 
 /// Result type alias

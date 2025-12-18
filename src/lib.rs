@@ -58,12 +58,6 @@ pub mod protocol;
 /// Tokenomics configuration and allocation management
 pub mod tokenomics;
 
-/// Vesting schedule management
-pub mod vesting;
-
-/// Validator rewards distribution
-pub mod rewards;
-
 /// Token standard implementation (ERC-20 like)
 pub mod token;
 
@@ -82,16 +76,11 @@ pub use protocol::{
 };
 pub use signature::{PublicKey, Signature, SignatureScheme};
 pub use tokenomics::{
-    AllocationCategory, EmissionPhase, TokenomicsConfig, VestingSchedule, DECIMALS,
+    AllocationCategory, EmissionPhase, TokenomicsConfig, DECIMALS,
     TOTAL_SUPPLY_MIST, TOTAL_SUPPLY_SBTC,
 };
 pub use transaction::{
     Command, Identifier, Transaction, TransactionData, TransactionExpiration, TransactionKind,
-};
-pub use vesting::{VestingManager, VestingSchedule as VestingScheduleImpl};
-pub use rewards::{
-    RewardsManager, ValidatorReward, RewardDistribution, DelegatorReward,
-    RewardsStatistics, RewardsConfig,
 };
 pub use token::{
     TokenMetadata, TokenBalance, TokenAllowance, TokenTransferEvent, TokenApprovalEvent,
