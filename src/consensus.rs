@@ -565,7 +565,7 @@ pub struct ValidatorMetadata {
     /// Worker public key (for batch creation)
     pub worker_pubkey: PublicKey,
 
-    /// Amount of SBTC staked (minimum 1,000,000)
+    /// Amount of SLVR staked (minimum 1,000,000)
     pub stake_amount: u64,
 
     /// Network address for RPC/API
@@ -597,7 +597,7 @@ impl ValidatorMetadata {
     ) -> Result<Self> {
         if stake_amount < 1_000_000 {
             return Err(Error::InvalidData(format!(
-                "Validator stake must be at least 1,000,000 SBTC, got {}",
+                "Validator stake must be at least 1,000,000 SLVR, got {}",
                 stake_amount
             )));
         }
@@ -649,7 +649,7 @@ impl ValidatorMetadata {
     pub fn validate(&self) -> Result<()> {
         if self.stake_amount < 1_000_000 {
             return Err(Error::InvalidData(format!(
-                "Insufficient stake: {} SBTC (minimum 1,000,000)",
+                "Insufficient stake: {} SLVR (minimum 1,000,000)",
                 self.stake_amount
             )));
         }
@@ -681,7 +681,7 @@ impl fmt::Display for ValidatorMetadata {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Validator {{ address: {}, stake: {} SBTC, commission: {}% }}",
+            "Validator {{ address: {}, stake: {} SLVR, commission: {}% }}",
             self.silver_address,
             self.stake_amount,
             self.commission_rate as f64 / 100.0

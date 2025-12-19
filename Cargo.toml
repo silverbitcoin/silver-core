@@ -19,8 +19,14 @@ hex = { workspace = true }
 base64 = { workspace = true }
 bs58 = { workspace = true }
 blake3 = { workspace = true }
+sha2 = { workspace = true }
 chrono = { workspace = true }
 once_cell = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+rand = { workspace = true }
+uuid = { version = "1.6", features = ["v4", "serde"] }
 
 # Cryptography
 ed25519-dalek = { workspace = true }
@@ -29,6 +35,16 @@ pqcrypto-sphincsplus = { workspace = true }
 pqcrypto-dilithium = { workspace = true }
 pqcrypto-traits = { workspace = true }
 
+# HTTP/RPC Server
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+hyper = { workspace = true }
+
 [dev-dependencies]
 proptest = { workspace = true }
 pretty_assertions = { workspace = true }
+
+[[bin]]
+name = "silverbitcoin-node"
+path = "src/bin/node.rs"
