@@ -9,12 +9,11 @@ use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 use axum::{
     extract::State,
-    http::{header, StatusCode},
+    http::StatusCode,
     response::IntoResponse,
     routing::post,
     Json, Router,
 };
-use serde_json::{json, Value};
 use tower_http::cors::CorsLayer;
 
 #[tokio::main]

@@ -10,33 +10,47 @@ use tracing::info;
 /// RPC Request structure
 #[derive(Debug, Deserialize)]
 pub struct RpcRequest {
+    /// JSON-RPC version
     pub jsonrpc: String,
+    /// RPC method name
     pub method: String,
+    /// Method parameters
     pub params: Vec<Value>,
+    /// Request ID
     pub id: u64,
 }
 
 /// RPC Response structure
 #[derive(Debug, Serialize)]
 pub struct RpcResponse {
+    /// JSON-RPC version
     pub jsonrpc: String,
+    /// Result value (if successful)
     pub result: Option<Value>,
+    /// Error object (if failed)
     pub error: Option<RpcError>,
+    /// Response ID
     pub id: u64,
 }
 
 /// RPC Error structure
 #[derive(Debug, Serialize)]
 pub struct RpcError {
+    /// Error code
     pub code: i32,
+    /// Error message
     pub message: String,
 }
 
 /// Blockchain state for RPC
 pub struct BlockchainState {
+    /// Current block count
     pub block_count: u64,
+    /// Current difficulty
     pub difficulty: u64,
+    /// Current hashrate
     pub hashrate: f64,
+    /// Mining enabled flag
     pub mining_enabled: bool,
 }
 
