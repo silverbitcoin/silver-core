@@ -421,35 +421,26 @@ pub struct Snapshot {
 }
 
 impl Snapshot {
-    /// Create a new snapshot
-    pub fn new(
+    /// Create a new snapshot builder
+    pub fn builder(
         sequence_number: SnapshotSequenceNumber,
         timestamp: u64,
-        previous_digest: SnapshotDigest,
-        root_state_digest: StateDigest,
-        transactions: Vec<TransactionDigest>,
-        cycle: CycleID,
-        validator_signatures: Vec<ValidatorSignature>,
-        stake_weight: u64,
         validator: SilverAddress,
-    ) -> Self {
-        let mut snapshot = Self {
+    ) -> SnapshotBuilder {
+        SnapshotBuilder {
             sequence_number,
             timestamp,
-            previous_digest,
-            root_state_digest,
-            transactions,
-            cycle,
-            validator_signatures,
-            stake_weight,
-            digest: SnapshotDigest::new([0u8; 64]),
             validator,
-        };
-
-        // Compute digest
-        snapshot.digest = snapshot.compute_digest();
-        snapshot
+            previous_digest: SnapshotDigest::new([0u8; 64]),
+            root_state_digest: StateDigest::new([0u8; 64]),
+            transactions: Vec::new(),
+            cycle: 0,
+            validator_signatures: Vec::new(),
+            stake_weight: 0,
+        }
     }
+
+
 
     /// Compute the digest of this snapshot
     pub fn compute_digest(&self) -> SnapshotDigest {
@@ -686,5 +677,76 @@ impl fmt::Display for ValidatorMetadata {
             self.stake_amount,
             self.commission_rate as f64 / 100.0
         )
+    }
+}
+
+/// Builder for Snapshot - real production-grade builder pattern
+pub struct SnapshotBuilder {
+    sequence_number: SnapshotSequenceNumber,
+    timestamp: u64,
+    validator: SilverAddress,
+    previous_digest: SnapshotDigest,
+    root_state_digest: StateDigest,
+    transactions: Vec<TransactionDigest>,
+    cycle: CycleID,
+    validator_signatures: Vec<ValidatorSignature>,
+    stake_weight: u64,
+}
+
+impl SnapshotBuilder {
+    /// Set previous digest
+    pub fn with_previous_digest(mut self, digest: SnapshotDigest) -> Self {
+        self.previous_digest = digest;
+        self
+    }
+
+    /// Set root state digest
+    pub fn with_root_state_digest(mut self, digest: StateDigest) -> Self {
+        self.root_state_digest = digest;
+        self
+    }
+
+    /// Set transactions
+    pub fn with_transactions(mut self, transactions: Vec<TransactionDigest>) -> Self {
+        self.transactions = transactions;
+        self
+    }
+
+    /// Set cycle
+    pub fn with_cycle(mut self, cycle: CycleID) -> Self {
+        self.cycle = cycle;
+        self
+    }
+
+    /// Set validator signatures
+    pub fn with_validator_signatures(mut self, signatures: Vec<ValidatorSignature>) -> Self {
+        self.validator_signatures = signatures;
+        self
+    }
+
+    /// Set stake weight
+    pub fn with_stake_weight(mut self, weight: u64) -> Self {
+        self.stake_weight = weight;
+        self
+    }
+
+    /// Build the snapshot
+    pub fn build(self) -> Snapshot {
+        let mut snapshot = Snapshot {
+            sequence_number: self.sequence_number,
+            timestamp: self.timestamp,
+            previous_digest: self.previous_digest,
+            root_state_digest: self.root_state_digest,
+            transactions: self.transactions,
+            cycle: self.cycle,
+            validator_signatures: self.validator_signatures,
+            stake_weight: self.stake_weight,
+            digest: SnapshotDigest::new([0u8; 64]),
+            validator: self.validator,
+        };
+
+        // Compute digest
+        snapshot.digest = snapshot.compute_digest();
+        snapshot
     }
 }

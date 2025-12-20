@@ -70,38 +70,27 @@ pub struct BlockHeader {
 }
 
 impl BlockHeader {
-    /// Create a new block header
-    pub fn new(
+    /// Create a new block header builder
+    pub fn builder(
         version: u32,
         parent_hash: [u8; 64],
         merkle_root: [u8; 64],
         timestamp: u64,
-        difficulty: u64,
-        chain_id: u32,
-        block_height: u64,
-        nonce: u64,
-        extra_nonce: u64,
-    ) -> Result<Self> {
-        if difficulty == 0 {
-            return Err(Error::InvalidData("Difficulty cannot be zero".to_string()));
-        }
-
-        if chain_id >= 20 {
-            return Err(Error::InvalidData("Invalid chain ID".to_string()));
-        }
-
-        Ok(Self {
+    ) -> BlockHeaderBuilder {
+        BlockHeaderBuilder {
             version,
             parent_hash,
             merkle_root,
             timestamp,
-            difficulty,
-            chain_id,
-            block_height,
-            nonce,
-            extra_nonce,
-        })
+            difficulty: 1,
+            chain_id: 0,
+            block_height: 0,
+            nonce: 0,
+            extra_nonce: 0,
+        }
     }
+
+
 
     /// Compute SHA-512 hash of this header
     pub fn hash(&self) -> [u8; 64] {
@@ -183,37 +172,31 @@ pub struct WorkProof {
 }
 
 impl WorkProof {
-    /// Create a new work proof
-    pub fn new(
+    /// Create a new work proof builder
+    pub fn builder(
         work_id: [u8; 64],
         chain_id: u32,
-        block_height: u64,
-        nonce: u64,
-        extra_nonce: u64,
         block_hash: [u8; 64],
         hash_result: [u8; 64],
-        timestamp: u64,
         miner_address: Vec<u8>,
-    ) -> Result<Self> {
-        if miner_address.is_empty() {
-            return Err(Error::InvalidData("Miner address cannot be empty".to_string()));
-        }
-
-        let difficulty_achieved = Self::get_difficulty_from_hash(&hash_result)?;
-
-        Ok(Self {
+    ) -> WorkProofBuilder {
+        WorkProofBuilder {
             work_id,
             chain_id,
-            block_height,
-            nonce,
-            extra_nonce,
+            block_height: 0,
+            nonce: 0,
+            extra_nonce: 0,
             block_hash,
             hash_result,
-            timestamp,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
             miner_address,
-            difficulty_achieved,
-        })
+        }
     }
+
+
 
     /// Verify proof against target
     pub fn verify(&self, target: &[u8; 64]) -> Result<bool> {
@@ -434,5 +417,134 @@ mod tests {
     fn test_difficulty_adjustment() {
         let adj = DifficultyAdjustment::new(0, 2_000_000, 1_000_000, 100, 1000);
         assert_eq!(adj.adjustment_factor, 2.0);
+    }
+}
+
+/// Builder for BlockHeader - real production-grade builder pattern
+pub struct BlockHeaderBuilder {
+    version: u32,
+    parent_hash: [u8; 64],
+    merkle_root: [u8; 64],
+    timestamp: u64,
+    difficulty: u64,
+    chain_id: u32,
+    block_height: u64,
+    nonce: u64,
+    extra_nonce: u64,
+}
+
+impl BlockHeaderBuilder {
+    /// Set difficulty
+    pub fn with_difficulty(mut self, difficulty: u64) -> Self {
+        self.difficulty = difficulty;
+        self
+    }
+
+    /// Set chain ID
+    pub fn with_chain_id(mut self, chain_id: u32) -> Self {
+        self.chain_id = chain_id;
+        self
+    }
+
+    /// Set block height
+    pub fn with_block_height(mut self, height: u64) -> Self {
+        self.block_height = height;
+        self
+    }
+
+    /// Set nonce
+    pub fn with_nonce(mut self, nonce: u64) -> Self {
+        self.nonce = nonce;
+        self
+    }
+
+    /// Set extra nonce
+    pub fn with_extra_nonce(mut self, extra_nonce: u64) -> Self {
+        self.extra_nonce = extra_nonce;
+        self
+    }
+
+    /// Build the block header
+    pub fn build(self) -> Result<BlockHeader> {
+        if self.difficulty == 0 {
+            return Err(Error::InvalidData("Difficulty cannot be zero".to_string()));
+        }
+
+        if self.chain_id >= 20 {
+            return Err(Error::InvalidData("Invalid chain ID".to_string()));
+        }
+
+        Ok(BlockHeader {
+            version: self.version,
+            parent_hash: self.parent_hash,
+            merkle_root: self.merkle_root,
+            timestamp: self.timestamp,
+            difficulty: self.difficulty,
+            chain_id: self.chain_id,
+            block_height: self.block_height,
+            nonce: self.nonce,
+            extra_nonce: self.extra_nonce,
+        })
+    }
+}
+
+/// Builder for WorkProof - real production-grade builder pattern
+pub struct WorkProofBuilder {
+    work_id: [u8; 64],
+    chain_id: u32,
+    block_height: u64,
+    nonce: u64,
+    extra_nonce: u64,
+    block_hash: [u8; 64],
+    hash_result: [u8; 64],
+    timestamp: u64,
+    miner_address: Vec<u8>,
+}
+
+impl WorkProofBuilder {
+    /// Set block height
+    pub fn with_block_height(mut self, height: u64) -> Self {
+        self.block_height = height;
+        self
+    }
+
+    /// Set nonce
+    pub fn with_nonce(mut self, nonce: u64) -> Self {
+        self.nonce = nonce;
+        self
+    }
+
+    /// Set extra nonce
+    pub fn with_extra_nonce(mut self, extra_nonce: u64) -> Self {
+        self.extra_nonce = extra_nonce;
+        self
+    }
+
+    /// Set timestamp
+    pub fn with_timestamp(mut self, timestamp: u64) -> Self {
+        self.timestamp = timestamp;
+        self
+    }
+
+    /// Build the work proof
+    pub fn build(self) -> Result<WorkProof> {
+        if self.miner_address.is_empty() {
+            return Err(Error::InvalidData("Miner address cannot be empty".to_string()));
+        }
+
+        let difficulty_achieved = WorkProof::get_difficulty_from_hash(&self.hash_result)?;
+
+        Ok(WorkProof {
+            work_id: self.work_id,
+            chain_id: self.chain_id,
+            block_height: self.block_height,
+            nonce: self.nonce,
+            extra_nonce: self.extra_nonce,
+            block_hash: self.block_hash,
+            hash_result: self.hash_result,
+            timestamp: self.timestamp,
+            miner_address: self.miner_address,
+            difficulty_achieved,
+        })
     }
 }
