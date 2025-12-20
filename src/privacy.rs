@@ -37,7 +37,7 @@ impl StealthAddress {
 
         // Derive address: SHA-512(shared_secret || recipient_spend_key)
         let mut hasher = Sha512::new();
-        hasher.update(&shared_secret);
+        hasher.update(shared_secret);
         hasher.update(recipient_spend_key);
         let derived = hasher.finalize();
         let derived_bytes = &derived[..32];
@@ -111,8 +111,8 @@ impl RingSignature {
 
         // For real signer
         let mut hasher = Sha512::new();
-        hasher.update(&message_hash);
-        hasher.update(&key_image);
+        hasher.update(message_hash);
+        hasher.update(key_image);
         let _challenge = hasher.finalize();
 
         // Generate random response for real signer
@@ -120,9 +120,9 @@ impl RingSignature {
         signature[real_index] = response;
 
         // For other ring members (fake signatures)
-        for i in 0..ring_size {
+        for (i, sig) in signature.iter_mut().enumerate().take(ring_size) {
             if i != real_index {
-                signature[i] = rng.gen();
+                *sig = rng.gen();
             }
         }
 
@@ -211,8 +211,8 @@ pub struct BulletproofPlus {
 impl BulletproofPlus {
     /// Create bulletproof for amount
     pub fn create(amount: u64) -> Result<Self, Box<dyn std::error::Error>> {
-        if amount > u64::MAX {
-            return Err("Amount exceeds maximum".into());
+        if amount == 0 {
+            return Err("Amount must be greater than zero".into());
         }
 
         // Generate commitment
@@ -221,8 +221,8 @@ impl BulletproofPlus {
 
         let mut hasher = Sha512::new();
         hasher.update(b"bulletproof_commitment");
-        hasher.update(&amount.to_le_bytes());
-        hasher.update(&blinding_factor);
+        hasher.update(amount.to_le_bytes());
+        hasher.update(blinding_factor);
         let commitment_hash = hasher.finalize();
         let mut commitment = [0u8; 32];
         commitment.copy_from_slice(&commitment_hash[..32]);
@@ -309,8 +309,8 @@ impl PrivacyTransaction {
         // Generate transaction ID
         let mut hasher = Sha512::new();
         hasher.update(&stealth_address.address);
-        hasher.update(&ring_signature.key_image);
-        hasher.update(&bulletproof.commitment);
+        hasher.update(ring_signature.key_image);
+        hasher.update(bulletproof.commitment);
         let tx_hash = hasher.finalize();
         let tx_id = format!("tx_{}", hex::encode(&tx_hash[..16]));
 

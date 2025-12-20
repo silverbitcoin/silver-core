@@ -107,8 +107,8 @@ impl BlockHeader {
     pub fn hash(&self) -> [u8; 64] {
         let mut hasher = Sha512::new();
         hasher.update(self.version.to_le_bytes());
-        hasher.update(&self.parent_hash);
-        hasher.update(&self.merkle_root);
+        hasher.update(self.parent_hash);
+        hasher.update(self.merkle_root);
         hasher.update(self.timestamp.to_le_bytes());
         hasher.update(self.difficulty.to_le_bytes());
         hasher.update(self.chain_id.to_le_bytes());

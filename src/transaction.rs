@@ -466,7 +466,7 @@ impl Command {
                         "SplitCoins must have at least one amount".to_string(),
                     ));
                 }
-                if amounts.iter().any(|&amt| amt == 0) {
+                if amounts.contains(&0) {
                     return Err(Error::InvalidData(
                         "SplitCoins amounts must be greater than 0".to_string(),
                     ));

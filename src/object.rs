@@ -55,8 +55,8 @@ impl<'de> Deserialize<'de> for ObjectID {
                 A: serde::de::SeqAccess<'de>,
             {
                 let mut arr = [0u8; 64];
-                for i in 0..64 {
-                    arr[i] = seq
+                for (i, elem) in arr.iter_mut().enumerate() {
+                    *elem = seq
                         .next_element()?
                         .ok_or_else(|| serde::de::Error::invalid_length(i, &self))?;
                 }
@@ -453,18 +453,15 @@ impl Object {
         }
 
         // Validate owner consistency
-        match &self.owner {
-            Owner::Shared {
+        if let Owner::Shared {
                 initial_shared_version,
-            } => {
-                if initial_shared_version > &self.version {
-                    return Err(Error::InvalidData(format!(
-                        "Initial shared version {} cannot be greater than current version {}",
-                        initial_shared_version.0, self.version.0
-                    )));
-                }
+            } = &self.owner {
+            if initial_shared_version > &self.version {
+                return Err(Error::InvalidData(format!(
+                    "Initial shared version {} cannot be greater than current version {}",
+                    initial_shared_version.0, self.version.0
+                )));
             }
-            _ => {}
         }
 
         Ok(())

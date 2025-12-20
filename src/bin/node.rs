@@ -37,8 +37,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Parse command line arguments
     let args: Vec<String> = std::env::args().collect();
-    let mut listen_addr: SocketAddr = "127.0.0.1:8333".parse()?;
-    let mut rpc_addr: SocketAddr = "127.0.0.1:8332".parse()?;
+    let mut listen_addr: SocketAddr = "0.0.0.0:8333".parse()?;
+    let mut rpc_addr: SocketAddr = "0.0.0.0:8332".parse()?;
     let mut data_dir = String::from("./silverbitcoin_data");
 
     let mut i = 1;
@@ -152,6 +152,7 @@ async fn run_node(
         difficulty: genesis.difficulty,
         hashrate: 0.0,
         mining_enabled: false,
+        mining_address: String::new(), // Will be set via RPC
     }));
 
     // Initialize P2P networking
@@ -258,14 +259,14 @@ fn print_help() {
     println!("    silverbitcoin-node [OPTIONS]");
     println!();
     println!("OPTIONS:");
-    println!("    -l, --listen <ADDR>      Listen address for P2P network (default: 127.0.0.1:8333)");
-    println!("    -r, --rpc <ADDR>         RPC server address (default: 127.0.0.1:8332)");
+    println!("    -l, --listen <ADDR>      Listen address for P2P network (default: 0.0.0.0:8333)");
+    println!("    -r, --rpc <ADDR>         RPC server address (default: 0.0.0.0:8332)");
     println!("    -d, --datadir <PATH>     Data directory (default: ./silverbitcoin_data)");
     println!("    -h, --help               Print help information");
     println!("    -v, --version            Print version information");
     println!();
     println!("EXAMPLES:");
-    println!("    # Run node with default settings");
+    println!("    # Run node with default settings (accessible from all interfaces)");
     println!("    silverbitcoin-node");
     println!();
     println!("    # Run node on custom port");

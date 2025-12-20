@@ -68,7 +68,7 @@ impl Wallet {
         let wallet_address = WalletAddress {
             address: address.clone(),
             public_key: hex::encode(public_key_bytes),
-            private_key: hex::encode(&seed),
+            private_key: hex::encode(seed),
             label: label.unwrap_or_else(|| format!("Address {}", self.addresses.len() + 1)),
             created_at: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -192,7 +192,7 @@ impl AddressGenerator {
         Ok((
             address,
             hex::encode(public_key_bytes),
-            hex::encode(&seed),
+            hex::encode(seed),
         ))
     }
 

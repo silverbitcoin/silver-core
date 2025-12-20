@@ -258,8 +258,8 @@ impl<'de> Deserialize<'de> for ProposalID {
                 A: serde::de::SeqAccess<'de>,
             {
                 let mut arr = [0u8; 64];
-                for i in 0..64 {
-                    arr[i] = seq
+                for (i, elem) in arr.iter_mut().enumerate() {
+                    *elem = seq
                         .next_element()?
                         .ok_or_else(|| serde::de::Error::invalid_length(i, &self))?;
                 }

@@ -27,8 +27,8 @@ pub struct BulletproofPlusPlus {
 impl BulletproofPlusPlus {
     /// Create optimized bulletproof
     pub fn create(amount: u64) -> Result<Self, Box<dyn std::error::Error>> {
-        if amount > u64::MAX {
-            return Err("Amount exceeds maximum".into());
+        if amount == 0 {
+            return Err("Amount must be greater than zero".into());
         }
 
         // Generate commitment
@@ -37,8 +37,8 @@ impl BulletproofPlusPlus {
 
         let mut hasher = Sha512::new();
         hasher.update(b"bulletproof_pp_commitment");
-        hasher.update(&amount.to_le_bytes());
-        hasher.update(&blinding_factor);
+        hasher.update(amount.to_le_bytes());
+        hasher.update(blinding_factor);
         let commitment_hash = hasher.finalize();
         let mut commitment = [0u8; 32];
         commitment.copy_from_slice(&commitment_hash[..32]);

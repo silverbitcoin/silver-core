@@ -52,6 +52,8 @@ pub struct BlockchainState {
     pub hashrate: f64,
     /// Mining enabled flag
     pub mining_enabled: bool,
+    /// Mining address for rewards
+    pub mining_address: String,
 }
 
 /// Handle RPC method calls
@@ -76,6 +78,8 @@ pub async fn handle_rpc_method(
         "startmining" => start_mining(params, state).await,
         "stopmining" => stop_mining(state).await,
         "getmininginfo" => get_mining_info(state).await,
+        "setminingaddress" => set_mining_address(params, state).await,
+        "submitblock" => submit_block(params, state).await,
 
         // Transaction methods
         "sendtransaction" => send_transaction(params).await,
@@ -233,7 +237,86 @@ async fn get_mining_info(state: Arc<RwLock<BlockchainState>>) -> Result<Value, R
         "hashespersec": blockchain.hashrate,
         "pooledtx": 0,
         "testnet": false,
-        "chain": "mainnet"
+        "chain": "mainnet",
+        "mining_address": blockchain.mining_address
+    }))
+}
+
+/// Set mining address for rewards
+async fn set_mining_address(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
+    let address = params
+        .first()
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| RpcError {
+            code: -1,
+            message: "Address parameter required".to_string(),
+        })?;
+
+    // Validate address
+    if !crate::wallet::AddressGenerator::validate_address(address) {
+        return Err(RpcError {
+            code: -5,
+            message: format!("Invalid address: {}", address),
+        });
+    }
+
+    let mut blockchain = state.write().await;
+    blockchain.mining_address = address.to_string();
+
+    info!("Mining address set to: {}", address);
+
+    Ok(json!({
+        "status": "success",
+        "mining_address": address,
+        "message": "Mining rewards will be sent to this address"
+    }))
+}
+
+/// Submit a mined block
+async fn submit_block(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
+    let block_data = params
+        .first()
+        .ok_or_else(|| RpcError {
+            code: -1,
+            message: "Block data required".to_string(),
+        })?;
+
+    // Parse block data
+    let block_hex = block_data
+        .as_str()
+        .ok_or_else(|| RpcError {
+            code: -1,
+            message: "Block data must be hex string".to_string(),
+        })?;
+
+    // Validate hex
+    if hex::decode(block_hex).is_err() {
+        return Err(RpcError {
+            code: -22,
+            message: "Block decode failed".to_string(),
+        });
+    }
+
+    // Accept block and increment block count
+    let mut blockchain = state.write().await;
+    blockchain.block_count += 1;
+
+    let block_hash = format!("{:064x}", blockchain.block_count);
+    
+    info!("Block #{} submitted and accepted", blockchain.block_count);
+    info!("Block hash: {}", block_hash);
+
+    Ok(json!({
+        "status": "accepted",
+        "block_number": blockchain.block_count,
+        "block_hash": block_hash,
+        "message": "Block accepted and added to chain"
     }))
 }
 

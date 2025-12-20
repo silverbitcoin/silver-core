@@ -47,3 +47,7 @@ pretty_assertions = { workspace = true }
 [[bin]]
 name = "silverbitcoin-node"
 path = "src/bin/node.rs"
+
+[[bin]]
+name = "generate_cold_wallet"
+path = "src/bin/generate_cold_wallet.rs"
