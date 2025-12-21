@@ -1,6 +1,6 @@
 //! Token standard implementation
 //!
-//! Implements a complete ERC-20-like token standard with full support for:
+//! Implements a complete SLVR-20 token standard with full support for:
 //! - Token creation and initialization
 //! - Transfer operations
 //! - Approval and allowance management
