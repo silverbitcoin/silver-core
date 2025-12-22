@@ -364,17 +364,18 @@ mod tests {
 
     #[test]
     fn test_block_header_creation() {
-        let header = BlockHeader::new(
+        let header = BlockHeader::builder(
             1,
             [1u8; 64],
             [2u8; 64],
             1000,
-            1_000_000,
-            0,
-            100,
-            12345,
-            0,
-        );
+        )
+        .with_difficulty(1_000_000)
+        .with_chain_id(0)
+        .with_block_height(100)
+        .with_nonce(12345)
+        .with_extra_nonce(0)
+        .build();
 
         assert!(header.is_ok());
         let header = header.unwrap();
@@ -383,17 +384,16 @@ mod tests {
 
     #[test]
     fn test_block_header_hash() {
-        let header = BlockHeader::new(
+        let header = BlockHeader::builder(
             1,
             [1u8; 64],
             [2u8; 64],
             1000,
-            1_000_000,
-            0,
-            100,
-            12345,
-            0,
         )
+        .with_difficulty(1_000_000)
+        .with_block_height(100)
+        .with_nonce(12345)
+        .build()
         .unwrap();
 
         let hash = header.hash();

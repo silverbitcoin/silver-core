@@ -33,6 +33,8 @@ p521 = { workspace = true }
 pqcrypto-sphincsplus = { workspace = true }
 pqcrypto-dilithium = { workspace = true }
 pqcrypto-traits = { workspace = true }
+aes-gcm = { workspace = true }
+argon2 = { workspace = true }
 
 # HTTP/RPC Server
 axum = { workspace = true }
