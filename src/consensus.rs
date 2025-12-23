@@ -8,6 +8,7 @@ use crate::{
     TransactionDigest,
 };
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use sha2::{Sha512, Digest};
 use std::fmt;
 
 // Macro to implement Serialize/Deserialize for 64-byte array wrappers
@@ -97,13 +98,13 @@ impl BatchID {
         timestamp: u64,
         previous_batches: &[BatchID],
     ) -> Self {
-        let mut hasher = blake3::Hasher::new();
+        let mut hasher = Sha512::new();
 
         // Hash author
         hasher.update(author.as_bytes());
 
         // Hash timestamp
-        hasher.update(&timestamp.to_le_bytes());
+        hasher.update(timestamp.to_le_bytes());
 
         // Hash previous batches
         for batch_id in previous_batches {
@@ -116,7 +117,7 @@ impl BatchID {
         }
 
         let mut output = [0u8; 64];
-        hasher.finalize_xof().fill(&mut output);
+        output.copy_from_slice(&hasher.finalize());
         Self(output)
     }
 }
@@ -444,10 +445,10 @@ impl Snapshot {
 
     /// Compute the digest of this snapshot
     pub fn compute_digest(&self) -> SnapshotDigest {
-        let mut hasher = blake3::Hasher::new();
+        let mut hasher = Sha512::new();
 
-        hasher.update(&self.sequence_number.to_le_bytes());
-        hasher.update(&self.timestamp.to_le_bytes());
+        hasher.update(self.sequence_number.to_le_bytes());
+        hasher.update(self.timestamp.to_le_bytes());
         hasher.update(self.previous_digest.as_bytes());
         hasher.update(self.root_state_digest.as_bytes());
 
@@ -455,10 +456,10 @@ impl Snapshot {
             hasher.update(tx_digest.as_bytes());
         }
 
-        hasher.update(&self.cycle.to_le_bytes());
+        hasher.update(self.cycle.to_le_bytes());
 
         let mut output = [0u8; 64];
-        hasher.finalize_xof().fill(&mut output);
+        output.copy_from_slice(&hasher.finalize());
         SnapshotDigest::new(output)
     }
 

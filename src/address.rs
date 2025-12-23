@@ -4,6 +4,7 @@
 //! providing quantum resistance and collision resistance.
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use sha2::{Sha512, Digest};
 use std::fmt;
 
 /// 512-bit quantum-resistant address derived from public keys using Blake3-512
@@ -122,10 +123,10 @@ impl SilverAddress {
 
     /// Derive address from public key using Blake3-512
     pub fn from_public_key(public_key: &[u8]) -> Self {
-        let mut hasher = blake3::Hasher::new();
+        let mut hasher = Sha512::new();
         hasher.update(public_key);
         let mut output = [0u8; 64];
-        hasher.finalize_xof().fill(&mut output);
+        output.copy_from_slice(&hasher.finalize());
         Self(output)
     }
 }

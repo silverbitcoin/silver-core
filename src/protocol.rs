@@ -4,6 +4,7 @@
 
 use crate::{Error, Result, Signature, SilverAddress, SnapshotDigest};
 use serde::{Deserialize, Serialize};
+use sha2::{Sha512, Digest};
 use std::fmt;
 
 /// Protocol version structure
@@ -295,21 +296,21 @@ impl ProposalID {
         proposer: &SilverAddress,
         created_at: u64,
     ) -> Self {
-        let mut hasher = blake3::Hasher::new();
+        let mut hasher = Sha512::new();
 
-        hasher.update(&version.major.to_le_bytes());
-        hasher.update(&version.minor.to_le_bytes());
+        hasher.update(version.major.to_le_bytes());
+        hasher.update(version.minor.to_le_bytes());
 
         for feature in &feature_flags.enabled {
             hasher.update(feature.as_bytes());
         }
 
-        hasher.update(&activation_cycle.to_le_bytes());
+        hasher.update(activation_cycle.to_le_bytes());
         hasher.update(proposer.as_bytes());
-        hasher.update(&created_at.to_le_bytes());
+        hasher.update(created_at.to_le_bytes());
 
         let mut output = [0u8; 64];
-        hasher.finalize_xof().fill(&mut output);
+        output.copy_from_slice(&hasher.finalize());
         Self(output)
     }
 }

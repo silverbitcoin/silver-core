@@ -14,19 +14,19 @@
 #![warn(missing_docs, rust_2018_idioms)]
 #![forbid(unsafe_code)]
 
-/// Number of MIST per SLVR (1 SLVR = 1,000,000,000 MIST)
+/// Number of MIST per SLVR (1 SLVR = 100,000,000 MIST)
 ///
-/// This provides 9 decimal places of precision for SLVR amounts.
+/// This provides 8 decimal places of precision for SLVR amounts.
 /// Similar to Bitcoin's satoshi (1 BTC = 100,000,000 satoshis),
-/// but with one extra decimal place for finer granularity.
-pub const MIST_PER_SLVR: u64 = 1_000_000_000;
+/// matching Bitcoin's standard for consistency.
+pub const MIST_PER_SLVR: u64 = 100_000_000;
 
 /// Minimum fuel price in MIST per fuel unit
 ///
 /// This is the absolute minimum price that must be paid per fuel unit.
-/// At 1000 MIST per fuel unit, this ensures spam prevention while
+/// At 100 MIST per fuel unit, this ensures spam prevention while
 /// keeping fees affordable.
-pub const MIN_FUEL_PRICE_MIST: u64 = 1000;
+pub const MIN_FUEL_PRICE_MIST: u64 = 100;
 
 /// Address types and utilities
 pub mod address;
@@ -55,7 +55,7 @@ pub mod hash;
 /// Protocol definitions
 pub mod protocol;
 
-/// Token standard implementation (ERC-20 like)
+/// Token standard implementation 
 pub mod token;
 
 /// Proof-of-Work types and structures
@@ -66,12 +66,6 @@ pub mod genesis;
 
 /// Wallet and address management
 pub mod wallet;
-
-/// Privacy features (Stealth Addresses, Ring Signatures, Bulletproofs)
-pub mod privacy;
-
-/// Privacy V2 (Bulletproofs++, Batch Verification, Compression)
-pub mod privacy_v2;
 
 /// RPC API for blockchain interaction
 pub mod rpc_api;
@@ -101,10 +95,3 @@ pub use token::{
 pub use pow::{BlockHeader, WorkProof, MiningReward, DifficultyAdjustment};
 pub use genesis::{GenesisBlock, GenesisConfig};
 pub use wallet::{Wallet, WalletAddress, AddressGenerator};
-pub use privacy::{
-    StealthAddress, RingSignature, BulletproofPlus, PrivacyTransaction, PrivacyPool, PoolStats,
-};
-pub use privacy_v2::{
-    BulletproofPlusPlus, BatchVerifier, BatchStats, CompressedTransaction, TransactionPoolV2,
-    PoolStatsV2, PrivacyTransactionV2,
-};

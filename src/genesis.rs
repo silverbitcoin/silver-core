@@ -27,7 +27,7 @@ impl GenesisConfig {
         Self {
             chain_id: 0,
             timestamp,
-            initial_difficulty: 1_000_000,
+            initial_difficulty: 1_000_000_000,
             message: "SilverBitcoin Genesis Block - Quantum-Resistant Blockchain".to_string(),
         }
     }

@@ -2,18 +2,16 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Signature scheme enumeration for quantum-resistant cryptography
+/// Signature scheme enumeration for 512-bit quantum-resistant cryptography
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SignatureScheme {
-    /// Secp256k1 (Bitcoin/Ethereum standard) - 256-bit elliptic curve signature
-    Secp256k1,
     /// SPHINCS+ post-quantum hash-based signature scheme (NIST standard)
     SphincsPlus,
     /// Dilithium3 post-quantum lattice-based signature scheme (NIST standard)
     Dilithium3,
     /// Secp512r1 (NIST P-521) classical 512-bit elliptic curve signature
     Secp512r1,
-    /// Hybrid mode combining classical and post-quantum signatures
+    /// Hybrid mode combining Secp512r1 and SPHINCS+ for maximum security
     Hybrid,
 }
 
@@ -31,7 +29,7 @@ pub struct PublicKey {
 pub struct Signature {
     /// The signature scheme used to generate this signature
     pub scheme: SignatureScheme,
-    /// Raw signature bytes (size varies by scheme: 64 bytes for Secp256k1, ~49KB for SPHINCS+, ~3.3KB for Dilithium3, 132 bytes for Secp512r1)
+    /// Raw signature bytes (size varies by scheme: ~49KB for SPHINCS+, ~3.3KB for Dilithium3, 132 bytes for Secp512r1)
     pub bytes: Vec<u8>,
 }
 

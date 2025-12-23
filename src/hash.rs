@@ -3,6 +3,7 @@
 //! All hashes in SilverBitcoin use Blake3-512 for quantum resistance.
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use sha2::{Sha512, Digest};
 use std::fmt;
 
 // Macro to implement Serialize/Deserialize for 64-byte array wrappers
@@ -198,10 +199,10 @@ impl Blake3Hash {
 
     /// Compute Blake3-512 hash of data
     pub fn hash(data: &[u8]) -> Self {
-        let mut hasher = blake3::Hasher::new();
+        let mut hasher = Sha512::new();
         hasher.update(data);
         let mut output = [0u8; 64];
-        hasher.finalize_xof().fill(&mut output);
+        output.copy_from_slice(&hasher.finalize());
         Self(output)
     }
 }

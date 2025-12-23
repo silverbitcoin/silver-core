@@ -6,6 +6,7 @@
 
 use crate::{Error, ObjectID, ObjectRef, Result, Signature, SilverAddress, TransactionDigest};
 use serde::{Deserialize, Serialize};
+use sha2::Digest;
 use std::fmt;
 
 /// Transaction with signatures
@@ -29,13 +30,26 @@ impl Transaction {
         Self { data, signatures }
     }
 
-    /// Compute the digest of this transaction for signing
+    /// Compute the digest of this transaction for signing using SHA-512
     pub fn digest(&self) -> TransactionDigest {
-        let serialized = bincode::serialize(&self.data).expect("Serialization should not fail");
-        let mut hasher = blake3::Hasher::new();
+        // Serialize transaction data using serde_json for reliable serialization
+        let serialized = match serde_json::to_vec(&self.data) {
+            Ok(data) => data,
+            Err(_e) => {
+                // Fallback: use debug format if JSON fails
+                format!("{:?}", self.data).into_bytes()
+            }
+        };
+
+        // Use SHA-512 for 512-bit blockchain
+        let mut hasher = sha2::Sha512::new();
         hasher.update(&serialized);
+        let result = hasher.finalize();
+        
+        // Convert to 64-byte array
         let mut output = [0u8; 64];
-        hasher.finalize_xof().fill(&mut output);
+        output.copy_from_slice(&result[..]);
+        
         TransactionDigest::new(output)
     }
 
@@ -126,11 +140,15 @@ impl Transaction {
         objects
     }
 
-    /// Estimate the size of this transaction in bytes
+    /// Estimate the size of this transaction in bytes using SHA-512
     pub fn size_bytes(&self) -> usize {
-        bincode::serialize(self)
-            .map(|bytes| bytes.len())
-            .unwrap_or(0)
+        match serde_json::to_vec(self) {
+            Ok(bytes) => bytes.len(),
+            Err(_) => {
+                // Fallback: estimate size from debug format
+                format!("{:?}", self).len()
+            }
+        }
     }
 }
 
