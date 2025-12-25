@@ -1,6 +1,6 @@
 [package]
 name = "silver-core"
-version = "2.5.3"
+version = "2.5.4"
 edition = "2021"
 rust-version = "1.90"
 authors = ["SilverBitcoin Team <team@silverbitcoin.org>"]
@@ -49,10 +49,14 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace", "compression-full"] }
 hyper = "1.4"
 
+# Database (Real Blockchain Storage)
+rusqlite = { version = "0.32", features = ["bundled", "chrono", "serde_json"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "sqlite"] }
+
 [dev-dependencies]
 proptest = "1.4"
 pretty_assertions = "1.4"
 
 [[bin]]
-name = "generate_cold_wallet"
+name = "wallet"
 path = "src/bin/generate_cold_wallet.rs"

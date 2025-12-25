@@ -9,9 +9,25 @@ pub enum Error {
     #[error("Serialization error: {0}")]
     Serialization(String),
 
+    /// Serialization error variant
+    #[error("Serialization error: {0}")]
+    SerializationError(String),
+
+    /// Deserialization error
+    #[error("Deserialization error: {0}")]
+    DeserializationError(String),
+
     /// Invalid data error
     #[error("Invalid data: {0}")]
     InvalidData(String),
+
+    /// Invalid operation error
+    #[error("Invalid operation: {0}")]
+    InvalidOperation(String),
+
+    /// Already exists error
+    #[error("Already exists: {0}")]
+    AlreadyExists(String),
 
     /// Internal error
     #[error("Internal error: {0}")]

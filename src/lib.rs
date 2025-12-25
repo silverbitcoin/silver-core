@@ -70,6 +70,25 @@ pub mod wallet;
 /// RPC API for blockchain interaction
 pub mod rpc_api;
 
+/// RPC Store Integration - connects stores to RPC methods
+pub mod rpc_store_integration;
+
+/// RPC Store Methods - implements store-backed RPC methods
+pub mod rpc_store_methods;
+
+/// RPC Store Methods Real - production-grade real storage integration
+pub mod rpc_store_methods_real;
+
+/// Explorer Integration - connects explorer to storage stores
+pub mod explorer_integration;
+
+/// RPC Store Typed - type-safe RPC methods with store downcasting
+/// DISABLED: Not used in current implementation, uses non-existent store methods
+// pub mod rpc_store_typed;
+
+/// Data models for persistent storage in ParityDB
+pub mod data_models;
+
 pub use account::{AccountBalance, AccountStore};
 pub use address::SilverAddress;
 pub use consensus::{

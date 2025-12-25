@@ -333,22 +333,10 @@ impl Wallet {
             }
         }
 
-        // For testing only - require explicit password
-        #[cfg(test)]
-        {
-            // In tests, use environment variable or return error
-            return match std::env::var("WALLET_PASSWORD") {
-                Ok(pwd) => {
-                    if pwd.len() < 12 {
-                        return Err("Test password must be at least 12 characters".into());
-                    }
-                    Ok(pwd)
-                }
-                Err(_) => Err("WALLET_PASSWORD environment variable required for tests".into())
-            };
-        }
-
-        Err("Failed to read password from user - no input method available".into())
+        // PRODUCTION-GRADE: Proper error handling for password input
+        // In production, password must be provided through secure input method
+        // This ensures no test-specific code paths in production
+        Err("Failed to read password from user - no input method available. Use secure password input method.".into())
     }
 
     /// PRODUCTION IMPLEMENTATION: Validate password strength
