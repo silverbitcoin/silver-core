@@ -90,8 +90,6 @@ impl BlockHeader {
         }
     }
 
-
-
     /// Compute SHA-512 hash of this header
     pub fn hash(&self) -> [u8; 64] {
         let mut hasher = Sha512::new();
@@ -196,8 +194,6 @@ impl WorkProof {
         }
     }
 
-
-
     /// Verify proof against target
     pub fn verify(&self, target: &[u8; 64]) -> Result<bool> {
         // Hash must be less than or equal to target
@@ -266,11 +262,7 @@ pub struct MiningReward {
 
 impl MiningReward {
     /// Create a new mining reward
-    pub fn new(
-        block_height: u64,
-        base_reward: u128,
-        transaction_fees: u128,
-    ) -> Result<Self> {
+    pub fn new(block_height: u64, base_reward: u128, transaction_fees: u128) -> Result<Self> {
         let total_miner_reward = base_reward + transaction_fees;
 
         Ok(Self {
@@ -364,18 +356,13 @@ mod tests {
 
     #[test]
     fn test_block_header_creation() {
-        let header = BlockHeader::builder(
-            1,
-            [1u8; 64],
-            [2u8; 64],
-            1000,
-        )
-        .with_difficulty(1_000_000)
-        .with_chain_id(0)
-        .with_block_height(100)
-        .with_nonce(12345)
-        .with_extra_nonce(0)
-        .build();
+        let header = BlockHeader::builder(1, [1u8; 64], [2u8; 64], 1000)
+            .with_difficulty(1_000_000)
+            .with_chain_id(0)
+            .with_block_height(100)
+            .with_nonce(12345)
+            .with_extra_nonce(0)
+            .build();
 
         assert!(header.is_ok());
         let header = header.unwrap();
@@ -384,17 +371,12 @@ mod tests {
 
     #[test]
     fn test_block_header_hash() {
-        let header = BlockHeader::builder(
-            1,
-            [1u8; 64],
-            [2u8; 64],
-            1000,
-        )
-        .with_difficulty(1_000_000)
-        .with_block_height(100)
-        .with_nonce(12345)
-        .build()
-        .unwrap();
+        let header = BlockHeader::builder(1, [1u8; 64], [2u8; 64], 1000)
+            .with_difficulty(1_000_000)
+            .with_block_height(100)
+            .with_nonce(12345)
+            .build()
+            .unwrap();
 
         let hash = header.hash();
         assert_eq!(hash.len(), 64);
@@ -529,7 +511,9 @@ impl WorkProofBuilder {
     /// Build the work proof
     pub fn build(self) -> Result<WorkProof> {
         if self.miner_address.is_empty() {
-            return Err(Error::InvalidData("Miner address cannot be empty".to_string()));
+            return Err(Error::InvalidData(
+                "Miner address cannot be empty".to_string(),
+            ));
         }
 
         let difficulty_achieved = WorkProof::get_difficulty_from_hash(&self.hash_result)?;

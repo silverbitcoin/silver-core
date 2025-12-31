@@ -454,8 +454,9 @@ impl Object {
 
         // Validate owner consistency
         if let Owner::Shared {
-                initial_shared_version,
-            } = &self.owner {
+            initial_shared_version,
+        } = &self.owner
+        {
             if initial_shared_version > &self.version {
                 return Err(Error::InvalidData(format!(
                     "Initial shared version {} cannot be greater than current version {}",

@@ -3,7 +3,7 @@
 //! All hashes in SilverBitcoin use Blake3-512 for quantum resistance.
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use sha2::{Sha512, Digest};
+use sha2::{Digest, Sha512};
 use std::fmt;
 
 // Macro to implement Serialize/Deserialize for 64-byte array wrappers

@@ -49,13 +49,16 @@ pub mod transaction;
 /// Consensus types and structures
 pub mod consensus;
 
+/// Explorer API - Production-grade real implementation
+pub mod explorer_api_real;
+
 /// Hash functions and types
 pub mod hash;
 
 /// Protocol definitions
 pub mod protocol;
 
-/// Token standard implementation 
+/// Token standard implementation
 pub mod token;
 
 /// Proof-of-Work types and structures
@@ -84,10 +87,23 @@ pub mod explorer_integration;
 
 /// RPC Store Typed - type-safe RPC methods with store downcasting
 /// DISABLED: Not used in current implementation, uses non-existent store methods
-// pub mod rpc_store_typed;
-
-/// Data models for persistent storage in ParityDB
+// pub mod rpc_store_typed;/// Data models for persistent storage in ParityDB
 pub mod data_models;
+
+/// Database store integration with ParityDB
+pub mod database_store_v2;
+
+/// Storage manager for database lifecycle
+pub mod storage_manager;
+
+/// Cache layer for performance optimization
+pub mod cache_layer;
+
+/// RPC Database Integration - Phase 4 production-grade implementation
+pub mod rpc_database_integration;
+
+/// Cache Database Integration - Phase 6 production-grade implementation
+pub mod cache_database_integration;
 
 pub use account::{AccountBalance, AccountStore};
 pub use address::SilverAddress;
@@ -104,13 +120,13 @@ pub use protocol::{
 };
 pub use signature::{PublicKey, Signature, SignatureScheme};
 
+pub use genesis::{GenesisBlock, GenesisConfig};
+pub use pow::{BlockHeader, DifficultyAdjustment, MiningReward, WorkProof};
+pub use token::{
+    TokenAllowance, TokenApprovalEvent, TokenBalance, TokenBurnEvent, TokenMetadata,
+    TokenMintEvent, TokenState, TokenTransferEvent,
+};
 pub use transaction::{
     Command, Identifier, Transaction, TransactionData, TransactionExpiration, TransactionKind,
 };
-pub use token::{
-    TokenMetadata, TokenBalance, TokenAllowance, TokenTransferEvent, TokenApprovalEvent,
-    TokenMintEvent, TokenBurnEvent, TokenState,
-};
-pub use pow::{BlockHeader, WorkProof, MiningReward, DifficultyAdjustment};
-pub use genesis::{GenesisBlock, GenesisConfig};
-pub use wallet::{Wallet, WalletAddress, AddressGenerator};
+pub use wallet::{AddressGenerator, Wallet, WalletAddress};

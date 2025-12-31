@@ -30,7 +30,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     // Save to file
-    let filename = format!("cold_wallet_{}.json", chrono::Local::now().format("%Y%m%d_%H%M%S"));
+    let filename = format!(
+        "cold_wallet_{}.json",
+        chrono::Local::now().format("%Y%m%d_%H%M%S")
+    );
     fs::write(&filename, serde_json::to_string_pretty(&wallet_data)?)?;
 
     println!("═══════════════════════════════════════════════════════════");

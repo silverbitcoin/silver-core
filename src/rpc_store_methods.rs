@@ -38,9 +38,7 @@ impl std::fmt::Display for RpcError {
 // ============================================================================
 
 /// Get block by hash or height from BlockStore
-pub async fn get_block_from_store(
-    hash_or_height: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_block_from_store(hash_or_height: &str) -> Result<Value, RpcError> {
     debug!("Getting block: {}", hash_or_height);
 
     // Parse as height or hash
@@ -48,14 +46,13 @@ pub async fn get_block_from_store(
 
     if is_height {
         // Query by height
-        let height: u64 = hash_or_height.parse()
-            .map_err(|_| RpcError {
-                code: -1,
-                message: "Invalid block height".to_string(),
-            })?;
+        let height: u64 = hash_or_height.parse().map_err(|_| RpcError {
+            code: -1,
+            message: "Invalid block height".to_string(),
+        })?;
 
         info!("Querying block by height: {}", height);
-        
+
         // Return block data structure
         Ok(json!({
             "hash": format!("{:064x}", height),
@@ -71,7 +68,7 @@ pub async fn get_block_from_store(
     } else {
         // Query by hash
         info!("Querying block by hash: {}", hash_or_height);
-        
+
         Ok(json!({
             "hash": hash_or_height,
             "height": 0,
@@ -87,13 +84,11 @@ pub async fn get_block_from_store(
 }
 
 /// Get block header from BlockStore
-pub async fn get_block_header_from_store(
-    hash: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_block_header_from_store(hash: &str) -> Result<Value, RpcError> {
     debug!("Getting block header: {}", hash);
 
     info!("Querying block header: {}", hash);
-    
+
     Ok(json!({
         "hash": hash,
         "version": 1,
@@ -111,13 +106,11 @@ pub async fn get_block_header_from_store(
 // ============================================================================
 
 /// Get transaction from TransactionStore
-pub async fn get_transaction_from_store(
-    txid: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_transaction_from_store(txid: &str) -> Result<Value, RpcError> {
     debug!("Getting transaction: {}", txid);
 
     info!("Querying transaction: {}", txid);
-    
+
     Ok(json!({
         "txid": txid,
         "hash": txid,
@@ -142,10 +135,16 @@ pub async fn list_transactions_from_store(
     count: u32,
     skip: u32,
 ) -> Result<Value, RpcError> {
-    debug!("Listing transactions for address: {:?}, count: {}, skip: {}", address, count, skip);
+    debug!(
+        "Listing transactions for address: {:?}, count: {}, skip: {}",
+        address, count, skip
+    );
 
-    info!("Listing transactions: address={:?}, count={}, skip={}", address, count, skip);
-    
+    info!(
+        "Listing transactions: address={:?}, count={}, skip={}",
+        address, count, skip
+    );
+
     Ok(json!([]))
 }
 
@@ -159,22 +158,25 @@ pub async fn list_unspent_from_store(
     max_conf: u32,
     addresses: Option<Vec<String>>,
 ) -> Result<Value, RpcError> {
-    debug!("Listing unspent outputs: min_conf={}, max_conf={}, addresses={:?}", min_conf, max_conf, addresses);
+    debug!(
+        "Listing unspent outputs: min_conf={}, max_conf={}, addresses={:?}",
+        min_conf, max_conf, addresses
+    );
 
-    info!("Querying unspent outputs: min_conf={}, max_conf={}", min_conf, max_conf);
-    
+    info!(
+        "Querying unspent outputs: min_conf={}, max_conf={}",
+        min_conf, max_conf
+    );
+
     Ok(json!([]))
 }
 
 /// Get UTXO from UTXOStore
-pub async fn get_utxo_from_store(
-    txid: &str,
-    vout: u32,
-) -> Result<Value, RpcError> {
+pub async fn get_utxo_from_store(txid: &str, vout: u32) -> Result<Value, RpcError> {
     debug!("Getting UTXO: {}:{}", txid, vout);
 
     info!("Querying UTXO: {}:{}", txid, vout);
-    
+
     Ok(json!({
         "bestblock": "0000000000000000000000000000000000000000000000000000000000000000",
         "confirmations": 0,
@@ -193,7 +195,7 @@ pub async fn get_utxo_set_info_from_store() -> Result<Value, RpcError> {
     debug!("Getting UTXO set info");
 
     info!("Querying UTXO set info");
-    
+
     Ok(json!({
         "height": 0,
         "bestblock": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -214,7 +216,7 @@ pub async fn get_mempool_info_from_store() -> Result<Value, RpcError> {
     debug!("Getting mempool info");
 
     info!("Querying mempool info");
-    
+
     Ok(json!({
         "size": 0,
         "bytes": 0,
@@ -226,13 +228,11 @@ pub async fn get_mempool_info_from_store() -> Result<Value, RpcError> {
 }
 
 /// Get mempool entry from MempoolStore
-pub async fn get_mempool_entry_from_store(
-    txid: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_mempool_entry_from_store(txid: &str) -> Result<Value, RpcError> {
     debug!("Getting mempool entry: {}", txid);
 
     info!("Querying mempool entry: {}", txid);
-    
+
     Ok(json!({
         "size": 250,
         "fee": 0.00001,
@@ -251,13 +251,11 @@ pub async fn get_mempool_entry_from_store(
 }
 
 /// Get raw mempool from MempoolStore
-pub async fn get_raw_mempool_from_store(
-    verbose: bool,
-) -> Result<Value, RpcError> {
+pub async fn get_raw_mempool_from_store(verbose: bool) -> Result<Value, RpcError> {
     debug!("Getting raw mempool: verbose={}", verbose);
 
     info!("Querying raw mempool");
-    
+
     if verbose {
         Ok(json!({}))
     } else {
@@ -270,13 +268,11 @@ pub async fn get_raw_mempool_from_store(
 // ============================================================================
 
 /// Get address info from AddressStore
-pub async fn get_address_info_from_store(
-    address: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_address_info_from_store(address: &str) -> Result<Value, RpcError> {
     debug!("Getting address info: {}", address);
 
     info!("Querying address info: {}", address);
-    
+
     Ok(json!({
         "address": address,
         "scriptPubKey": "",
@@ -293,13 +289,11 @@ pub async fn get_address_info_from_store(
 }
 
 /// Get address balance from AddressStore
-pub async fn get_address_balance_from_store(
-    address: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_address_balance_from_store(address: &str) -> Result<Value, RpcError> {
     debug!("Getting address balance: {}", address);
 
     info!("Querying address balance: {}", address);
-    
+
     Ok(json!({
         "address": address,
         "balance": 0.0,
@@ -314,10 +308,13 @@ pub async fn get_received_by_address_from_store(
     address: &str,
     min_conf: u32,
 ) -> Result<Value, RpcError> {
-    debug!("Getting received by address: {}, min_conf: {}", address, min_conf);
+    debug!(
+        "Getting received by address: {}, min_conf: {}",
+        address, min_conf
+    );
 
     info!("Querying received by address: {}", address);
-    
+
     Ok(json!(0.0))
 }
 
@@ -326,14 +323,11 @@ pub async fn get_received_by_address_from_store(
 // ============================================================================
 
 /// Get events from EventStorePersistent
-pub async fn get_events_from_store(
-    page: u32,
-    page_size: u32,
-) -> Result<Value, RpcError> {
+pub async fn get_events_from_store(page: u32, page_size: u32) -> Result<Value, RpcError> {
     debug!("Getting events: page={}, page_size={}", page, page_size);
 
     info!("Querying events: page={}, page_size={}", page, page_size);
-    
+
     Ok(json!({
         "page": page,
         "page_size": page_size,
@@ -343,13 +337,11 @@ pub async fn get_events_from_store(
 }
 
 /// Get events by transaction from EventStorePersistent
-pub async fn get_events_by_transaction_from_store(
-    txid: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_events_by_transaction_from_store(txid: &str) -> Result<Value, RpcError> {
     debug!("Getting events by transaction: {}", txid);
 
     info!("Querying events by transaction: {}", txid);
-    
+
     Ok(json!({
         "txid": txid,
         "events": [],
@@ -357,13 +349,11 @@ pub async fn get_events_by_transaction_from_store(
 }
 
 /// Get events by object from EventStorePersistent
-pub async fn get_events_by_object_from_store(
-    object_id: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_events_by_object_from_store(object_id: &str) -> Result<Value, RpcError> {
     debug!("Getting events by object: {}", object_id);
 
     info!("Querying events by object: {}", object_id);
-    
+
     Ok(json!({
         "object_id": object_id,
         "events": [],
@@ -371,13 +361,11 @@ pub async fn get_events_by_object_from_store(
 }
 
 /// Get events by type from EventStorePersistent
-pub async fn get_events_by_type_from_store(
-    event_type: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_events_by_type_from_store(event_type: &str) -> Result<Value, RpcError> {
     debug!("Getting events by type: {}", event_type);
 
     info!("Querying events by type: {}", event_type);
-    
+
     Ok(json!({
         "event_type": event_type,
         "events": [],
@@ -389,13 +377,11 @@ pub async fn get_events_by_type_from_store(
 // ============================================================================
 
 /// Get token info from TokenStorePersistent
-pub async fn get_token_info_from_store(
-    contract_address: &str,
-) -> Result<Value, RpcError> {
+pub async fn get_token_info_from_store(contract_address: &str) -> Result<Value, RpcError> {
     debug!("Getting token info: {}", contract_address);
 
     info!("Querying token info: {}", contract_address);
-    
+
     Ok(json!({
         "contract_address": contract_address,
         "name": "",
@@ -414,7 +400,7 @@ pub async fn get_token_balance_from_store(
     debug!("Getting token balance: {}:{}", contract_address, account);
 
     info!("Querying token balance: {}:{}", contract_address, account);
-    
+
     Ok(json!({
         "contract_address": contract_address,
         "account": account,
@@ -428,10 +414,16 @@ pub async fn get_token_allowance_from_store(
     owner: &str,
     spender: &str,
 ) -> Result<Value, RpcError> {
-    debug!("Getting token allowance: {}:{}:{}", contract_address, owner, spender);
+    debug!(
+        "Getting token allowance: {}:{}:{}",
+        contract_address, owner, spender
+    );
 
-    info!("Querying token allowance: {}:{}:{}", contract_address, owner, spender);
-    
+    info!(
+        "Querying token allowance: {}:{}:{}",
+        contract_address, owner, spender
+    );
+
     Ok(json!({
         "contract_address": contract_address,
         "owner": owner,
@@ -445,7 +437,7 @@ pub async fn list_tokens_from_store() -> Result<Value, RpcError> {
     debug!("Listing tokens");
 
     info!("Querying all tokens");
-    
+
     Ok(json!({
         "tokens": [],
         "count": 0,
@@ -457,13 +449,11 @@ pub async fn list_tokens_from_store() -> Result<Value, RpcError> {
 // ============================================================================
 
 /// Create wallet in WalletStore
-pub async fn create_wallet_in_store(
-    wallet_name: &str,
-) -> Result<Value, RpcError> {
+pub async fn create_wallet_in_store(wallet_name: &str) -> Result<Value, RpcError> {
     debug!("Creating wallet: {}", wallet_name);
 
     info!("Creating wallet: {}", wallet_name);
-    
+
     Ok(json!({
         "name": wallet_name,
         "warning": "",
@@ -476,10 +466,13 @@ pub async fn import_privkey_in_store(
     label: Option<&str>,
     rescan: bool,
 ) -> Result<Value, RpcError> {
-    debug!("Importing private key: label={:?}, rescan={}", label, rescan);
+    debug!(
+        "Importing private key: label={:?}, rescan={}",
+        label, rescan
+    );
 
     info!("Importing private key");
-    
+
     Ok(json!({
         "address": "",
         "label": label.unwrap_or(""),
@@ -488,13 +481,11 @@ pub async fn import_privkey_in_store(
 }
 
 /// Dump private key from WalletStore
-pub async fn dump_privkey_from_store(
-    address: &str,
-) -> Result<Value, RpcError> {
+pub async fn dump_privkey_from_store(address: &str) -> Result<Value, RpcError> {
     debug!("Dumping private key for address: {}", address);
 
     info!("Dumping private key for address: {}", address);
-    
+
     Ok(json!({
         "address": address,
         "privkey": "",
@@ -506,7 +497,7 @@ pub async fn get_wallet_info_from_store() -> Result<Value, RpcError> {
     debug!("Getting wallet info");
 
     info!("Querying wallet info");
-    
+
     Ok(json!({
         "walletname": "",
         "walletversion": 1,
@@ -531,10 +522,13 @@ pub async fn send_raw_transaction_to_store(
     _hex: &str,
     allow_high_fees: bool,
 ) -> Result<Value, RpcError> {
-    debug!("Sending raw transaction: allow_high_fees={}", allow_high_fees);
+    debug!(
+        "Sending raw transaction: allow_high_fees={}",
+        allow_high_fees
+    );
 
     info!("Broadcasting raw transaction");
-    
+
     Ok(json!({
         "txid": "0000000000000000000000000000000000000000000000000000000000000000",
         "size": 0,
@@ -548,10 +542,14 @@ pub async fn send_transaction_to_store(
     _inputs: Option<Vec<(String, u32)>>,
     fee_rate: Option<f64>,
 ) -> Result<Value, RpcError> {
-    debug!("Sending transaction: outputs={}, fee_rate={:?}", outputs.len(), fee_rate);
+    debug!(
+        "Sending transaction: outputs={}, fee_rate={:?}",
+        outputs.len(),
+        fee_rate
+    );
 
     info!("Broadcasting transaction");
-    
+
     Ok(json!({
         "txid": "0000000000000000000000000000000000000000000000000000000000000000",
         "size": 0,
@@ -564,13 +562,11 @@ pub async fn send_transaction_to_store(
 // ============================================================================
 
 /// Estimate fee from FeeStore
-pub async fn estimate_fee_from_store(
-    blocks: u32,
-) -> Result<Value, RpcError> {
+pub async fn estimate_fee_from_store(blocks: u32) -> Result<Value, RpcError> {
     debug!("Estimating fee for {} blocks", blocks);
 
     info!("Estimating fee for {} blocks", blocks);
-    
+
     Ok(json!({
         "feerate": 0.00001,
         "blocks": blocks,
@@ -582,10 +578,13 @@ pub async fn estimate_smart_fee_from_store(
     blocks: u32,
     estimate_mode: Option<&str>,
 ) -> Result<Value, RpcError> {
-    debug!("Estimating smart fee for {} blocks: mode={:?}", blocks, estimate_mode);
+    debug!(
+        "Estimating smart fee for {} blocks: mode={:?}",
+        blocks, estimate_mode
+    );
 
     info!("Estimating smart fee for {} blocks", blocks);
-    
+
     Ok(json!({
         "feerate": 0.00001,
         "blocks": blocks,
@@ -602,10 +601,13 @@ pub async fn query_by_timestamp_range_from_store(
     from_timestamp: u64,
     to_timestamp: u64,
 ) -> Result<Value, RpcError> {
-    debug!("Querying by timestamp range: {} to {}", from_timestamp, to_timestamp);
+    debug!(
+        "Querying by timestamp range: {} to {}",
+        from_timestamp, to_timestamp
+    );
 
     info!("Querying transactions by timestamp range");
-    
+
     Ok(json!({
         "from_timestamp": from_timestamp,
         "to_timestamp": to_timestamp,
@@ -615,14 +617,11 @@ pub async fn query_by_timestamp_range_from_store(
 }
 
 /// Query transactions by fee range from AdvancedIndexManager
-pub async fn query_by_fee_range_from_store(
-    min_fee: f64,
-    max_fee: f64,
-) -> Result<Value, RpcError> {
+pub async fn query_by_fee_range_from_store(min_fee: f64, max_fee: f64) -> Result<Value, RpcError> {
     debug!("Querying by fee range: {} to {}", min_fee, max_fee);
 
     info!("Querying transactions by fee range");
-    
+
     Ok(json!({
         "min_fee": min_fee,
         "max_fee": max_fee,
@@ -636,10 +635,13 @@ pub async fn query_by_confirmations_from_store(
     min_confirmations: u64,
     max_confirmations: u64,
 ) -> Result<Value, RpcError> {
-    debug!("Querying by confirmations: {} to {}", min_confirmations, max_confirmations);
+    debug!(
+        "Querying by confirmations: {} to {}",
+        min_confirmations, max_confirmations
+    );
 
     info!("Querying transactions by confirmations");
-    
+
     Ok(json!({
         "min_confirmations": min_confirmations,
         "max_confirmations": max_confirmations,
@@ -649,13 +651,11 @@ pub async fn query_by_confirmations_from_store(
 }
 
 /// Query transactions by script type from AdvancedIndexManager
-pub async fn query_by_script_type_from_store(
-    script_type: &str,
-) -> Result<Value, RpcError> {
+pub async fn query_by_script_type_from_store(script_type: &str) -> Result<Value, RpcError> {
     debug!("Querying by script type: {}", script_type);
 
     info!("Querying transactions by script type: {}", script_type);
-    
+
     Ok(json!({
         "script_type": script_type,
         "transactions": [],
@@ -677,7 +677,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_block_from_store_by_hash() {
-        let result = get_block_from_store("0000000000000000000000000000000000000000000000000000000000000000").await;
+        let result = get_block_from_store(
+            "0000000000000000000000000000000000000000000000000000000000000000",
+        )
+        .await;
         assert!(result.is_ok());
     }
 

@@ -3,36 +3,46 @@
 //! REAL IMPLEMENTATION - All methods are complete, functional, and production-ready
 //! SHA-512 based hashing for all cryptographic operations
 
+use hex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use sha2::{Digest, Sha512};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use std::collections::HashMap;
-use sha2::{Sha512, Digest};
-use hex;
 
 /// RPC Request structure
 #[derive(Debug, Deserialize)]
 pub struct RpcRequest {
+    /// JSON-RPC version
     pub jsonrpc: String,
+    /// RPC method name
     pub method: String,
+    /// Method parameters
     pub params: Vec<Value>,
+    /// Request ID
     pub id: u64,
 }
 
 /// RPC Response structure
 #[derive(Debug, Serialize)]
 pub struct RpcResponse {
+    /// JSON-RPC version
     pub jsonrpc: String,
+    /// Response result (if successful)
     pub result: Option<Value>,
+    /// Response error (if failed)
     pub error: Option<RpcError>,
+    /// Request ID
     pub id: u64,
 }
 
 /// RPC Error structure
 #[derive(Debug, Serialize, Clone)]
 pub struct RpcError {
+    /// Error code
     pub code: i32,
+    /// Error message
     pub message: String,
 }
 
@@ -146,7 +156,9 @@ fn compute_sha512(data: &[u8]) -> String {
 
 /// Validate address format (SLVR prefix + 128 hex chars for SHA-512)
 fn validate_address_format(address: &str) -> bool {
-    address.starts_with("SLVR") && address.len() == 132 && address[4..].chars().all(|c| c.is_ascii_hexdigit())
+    address.starts_with("SLVR")
+        && address.len() == 132
+        && address[4..].chars().all(|c| c.is_ascii_hexdigit())
 }
 
 /// Generate new address with SHA-512
@@ -292,7 +304,10 @@ async fn get_best_block_hash(state: Arc<RwLock<BlockchainState>>) -> Result<Valu
     Ok(Value::String(hash))
 }
 
-async fn get_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_block(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -306,7 +321,7 @@ async fn get_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Res
     })?;
 
     let s = state.read().await;
-    
+
     if let Ok(height) = hash_or_height.parse::<u64>() {
         if height > s.block_count {
             return Err(RpcError {
@@ -314,14 +329,14 @@ async fn get_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Res
                 message: "Block height out of range".to_string(),
             });
         }
-        
+
         let block_hash = compute_sha512(format!("block_{}", height).as_bytes());
         let prev_hash = if height > 0 {
             compute_sha512(format!("block_{}", height - 1).as_bytes())
         } else {
             "0".repeat(128)
         };
-        
+
         return Ok(json!({
             "hash": block_hash,
             "confirmations": s.block_count - height + 1,
@@ -331,7 +346,7 @@ async fn get_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Res
             "merkleroot": compute_sha512(format!("merkle_{}", height).as_bytes()),
             "time": 1700000000 + (height * 600),
             "mediantime": 1700000000 + (height * 600),
-            "nonce": height as u64,
+            "nonce": height,
             "bits": "207fffff",
             "difficulty": 1.0 + (height as f64 * 0.001),
             "chainwork": compute_sha512(format!("chainwork_{}", height).as_bytes()),
@@ -385,7 +400,10 @@ async fn get_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Res
     }))
 }
 
-async fn get_block_header(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_block_header(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -399,7 +417,7 @@ async fn get_block_header(params: &[Value], state: Arc<RwLock<BlockchainState>>)
     })?;
 
     let _state = state.read().await;
-    
+
     Ok(json!({
         "hash": hash,
         "confirmations": 1,
@@ -424,7 +442,10 @@ async fn get_block_header(params: &[Value], state: Arc<RwLock<BlockchainState>>)
     }))
 }
 
-async fn get_block_hash(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_block_hash(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -438,7 +459,7 @@ async fn get_block_hash(params: &[Value], state: Arc<RwLock<BlockchainState>>) -
     })?;
 
     let s = state.read().await;
-    
+
     if height > s.block_count {
         return Err(RpcError {
             code: -8,
@@ -453,7 +474,7 @@ async fn get_block_hash(params: &[Value], state: Arc<RwLock<BlockchainState>>) -
 async fn get_chain_tips(state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
     let s = state.read().await;
     let best_hash = compute_sha512(format!("block_{}", s.block_count).as_bytes());
-    
+
     Ok(json!([{
         "height": s.block_count,
         "hash": best_hash,
@@ -462,7 +483,10 @@ async fn get_chain_tips(state: Arc<RwLock<BlockchainState>>) -> Result<Value, Rp
     }]))
 }
 
-async fn get_network_hashps(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_network_hashps(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     match serde_json::Number::from_f64(s.hashrate) {
         Some(num) => Ok(Value::Number(num)),
@@ -477,7 +501,7 @@ async fn get_txout_set_info(state: Arc<RwLock<BlockchainState>>) -> Result<Value
     let s = state.read().await;
     let utxos = s.utxos.read().await;
     let total_value: u128 = utxos.values().map(|u| u.value).sum();
-    
+
     Ok(json!({
         "height": s.block_count,
         "bestblock": compute_sha512(format!("block_{}", s.block_count).as_bytes()),
@@ -498,14 +522,22 @@ async fn get_new_address(_params: &[Value]) -> Result<Value, RpcError> {
     Ok(Value::String(address))
 }
 
-async fn list_addresses(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn list_addresses(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     let balances = s.balances.read().await;
     let addresses: Vec<String> = balances.keys().cloned().collect();
-    Ok(Value::Array(addresses.into_iter().map(Value::String).collect()))
+    Ok(Value::Array(
+        addresses.into_iter().map(Value::String).collect(),
+    ))
 }
 
-async fn get_address_balance(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_address_balance(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -537,14 +569,15 @@ async fn get_address_balance(params: &[Value], state: Arc<RwLock<BlockchainState
     }))
 }
 
-async fn get_balance(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_balance(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     let balances = s.balances.read().await;
     let total_balance: u128 = balances.values().sum();
-    
-    let minconf = params.get(0)
-        .and_then(|v| v.as_u64())
-        .unwrap_or(1);
+
+    let minconf = params.first().and_then(|v| v.as_u64()).unwrap_or(1);
 
     Ok(json!({
         "balance": total_balance as f64 / 1e8,
@@ -555,7 +588,10 @@ async fn get_balance(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> R
     }))
 }
 
-async fn get_address_info(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_address_info(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -621,7 +657,10 @@ async fn validate_address(params: &[Value]) -> Result<Value, RpcError> {
     }))
 }
 
-async fn get_received_by_address(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_received_by_address(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -655,17 +694,23 @@ async fn get_received_by_address(params: &[Value], state: Arc<RwLock<BlockchainS
         }
     }
 
-    Ok(Value::Number(serde_json::Number::from_f64(total_received as f64 / 1e8).unwrap_or_else(|| 0.into())))
+    Ok(Value::Number(
+        serde_json::Number::from_f64(total_received as f64 / 1e8).unwrap_or_else(|| 0.into()),
+    ))
 }
 
-async fn list_received_by_address(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn list_received_by_address(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     let balances = s.balances.read().await;
     let transactions = s.transactions.read().await;
 
     let mut result = Vec::new();
     for (address, balance) in balances.iter() {
-        let _received: u128 = transactions.values()
+        let _received: u128 = transactions
+            .values()
             .flat_map(|tx| &tx.outputs)
             .filter_map(|output| {
                 if let Some(addr) = &output.address {
@@ -694,7 +739,10 @@ async fn list_received_by_address(_params: &[Value], state: Arc<RwLock<Blockchai
 // TRANSACTION METHODS - PRODUCTION GRADE
 // ============================================================================
 
-async fn send_transaction(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn send_transaction(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -708,7 +756,7 @@ async fn send_transaction(params: &[Value], state: Arc<RwLock<BlockchainState>>)
     })?;
 
     let txid = compute_sha512(tx_hex.as_bytes());
-    
+
     let s = state.write().await;
     let mut mempool = s.mempool.write().await;
     mempool.push(MempoolTx {
@@ -724,7 +772,10 @@ async fn send_transaction(params: &[Value], state: Arc<RwLock<BlockchainState>>)
     Ok(Value::String(txid))
 }
 
-async fn get_transaction(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_transaction(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -761,7 +812,10 @@ async fn get_transaction(params: &[Value], state: Arc<RwLock<BlockchainState>>) 
     })
 }
 
-async fn get_raw_transaction(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_raw_transaction(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -859,7 +913,10 @@ async fn sign_raw_transaction(params: &[Value]) -> Result<Value, RpcError> {
     }))
 }
 
-async fn send_raw_transaction(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn send_raw_transaction(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -873,7 +930,7 @@ async fn send_raw_transaction(params: &[Value], state: Arc<RwLock<BlockchainStat
     })?;
 
     let txid = compute_sha512(tx_hex.as_bytes());
-    
+
     let s = state.write().await;
     let mut mempool = s.mempool.write().await;
     mempool.push(MempoolTx {
@@ -889,46 +946,61 @@ async fn send_raw_transaction(params: &[Value], state: Arc<RwLock<BlockchainStat
     Ok(Value::String(txid))
 }
 
-async fn list_transactions(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn list_transactions(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     let transactions = s.transactions.read().await;
 
-    let result: Vec<Value> = transactions.values().map(|tx| {
-        json!({
-            "txid": tx.txid,
-            "version": tx.version,
-            "locktime": tx.locktime,
-            "vin": tx.inputs,
-            "vout": tx.outputs,
-            "confirmations": tx.confirmations,
-            "blockheight": tx.blockheight,
-            "time": tx.time,
+    let result: Vec<Value> = transactions
+        .values()
+        .map(|tx| {
+            json!({
+                "txid": tx.txid,
+                "version": tx.version,
+                "locktime": tx.locktime,
+                "vin": tx.inputs,
+                "vout": tx.outputs,
+                "confirmations": tx.confirmations,
+                "blockheight": tx.blockheight,
+                "time": tx.time,
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(Value::Array(result))
 }
 
-async fn list_unspent(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn list_unspent(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     let utxos = s.utxos.read().await;
 
-    let result: Vec<Value> = utxos.values().map(|utxo| {
-        json!({
-            "txid": utxo.txid,
-            "vout": utxo.vout,
-            "address": utxo.address,
-            "scriptPubKey": compute_sha512(utxo.address.as_bytes()),
-            "amount": utxo.value as f64 / 1e8,
-            "confirmations": utxo.confirmations,
-            "spendable": utxo.spendable,
+    let result: Vec<Value> = utxos
+        .values()
+        .map(|utxo| {
+            json!({
+                "txid": utxo.txid,
+                "vout": utxo.vout,
+                "address": utxo.address,
+                "scriptPubKey": compute_sha512(utxo.address.as_bytes()),
+                "amount": utxo.value as f64 / 1e8,
+                "confirmations": utxo.confirmations,
+                "spendable": utxo.spendable,
+            })
         })
-    }).collect();
+        .collect();
 
     Ok(Value::Array(result))
 }
 
-async fn get_txout(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_txout(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.len() < 2 {
         return Err(RpcError {
             code: -1,
@@ -987,7 +1059,10 @@ async fn get_mempool_info(state: Arc<RwLock<BlockchainState>>) -> Result<Value, 
     }))
 }
 
-async fn get_mempool_entry(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_mempool_entry(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -1027,11 +1102,17 @@ async fn get_mempool_entry(params: &[Value], state: Arc<RwLock<BlockchainState>>
     })
 }
 
-async fn get_raw_mempool(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_raw_mempool(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     let mempool = s.mempool.read().await;
 
-    let txids: Vec<Value> = mempool.iter().map(|tx| Value::String(tx.txid.clone())).collect();
+    let txids: Vec<Value> = mempool
+        .iter()
+        .map(|tx| Value::String(tx.txid.clone()))
+        .collect();
     Ok(Value::Array(txids))
 }
 
@@ -1039,7 +1120,10 @@ async fn get_raw_mempool(_params: &[Value], state: Arc<RwLock<BlockchainState>>)
 // MINING METHODS - PRODUCTION GRADE
 // ============================================================================
 
-async fn start_mining(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn start_mining(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let mut s = state.write().await;
     s.mining_enabled = true;
     Ok(json!({
@@ -1075,7 +1159,10 @@ async fn get_mining_info(state: Arc<RwLock<BlockchainState>>) -> Result<Value, R
     }))
 }
 
-async fn set_mining_address(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn set_mining_address(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -1104,7 +1191,10 @@ async fn set_mining_address(params: &[Value], state: Arc<RwLock<BlockchainState>
     }))
 }
 
-async fn submit_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn submit_block(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -1118,10 +1208,13 @@ async fn submit_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> 
     })?;
 
     let block_hash = compute_sha512(block_hex.as_bytes());
-    
+
     let mut s = state.write().await;
     s.block_count += 1;
-    s.blocks.write().await.insert(s.block_count, block_hash.clone());
+    s.blocks
+        .write()
+        .await
+        .insert(s.block_count, block_hash.clone());
 
     Ok(json!({
         "status": "accepted",
@@ -1130,7 +1223,10 @@ async fn submit_block(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> 
     }))
 }
 
-async fn get_block_template(_params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn get_block_template(
+    _params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     let s = state.read().await;
     let prev_hash = compute_sha512(format!("block_{}", s.block_count).as_bytes());
     let coinbase_tx = compute_sha512(format!("coinbase_{}", s.block_count + 1).as_bytes());
@@ -1165,7 +1261,10 @@ async fn get_block_template(_params: &[Value], state: Arc<RwLock<BlockchainState
     }))
 }
 
-async fn submit_header(params: &[Value], state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
+async fn submit_header(
+    params: &[Value],
+    state: Arc<RwLock<BlockchainState>>,
+) -> Result<Value, RpcError> {
     if params.is_empty() {
         return Err(RpcError {
             code: -1,
@@ -1179,7 +1278,7 @@ async fn submit_header(params: &[Value], state: Arc<RwLock<BlockchainState>>) ->
     })?;
 
     let header_hash = compute_sha512(header_hex.as_bytes());
-    
+
     let mut s = state.write().await;
     s.block_count += 1;
 
@@ -1223,46 +1322,44 @@ async fn get_network_info(state: Arc<RwLock<BlockchainState>>) -> Result<Value, 
 
 async fn get_peer_info(state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
     let s = state.read().await;
-    let peers = vec![
-        json!({
-            "id": 1,
-            "addr": "192.168.1.100:8333",
-            "addrlocal": "192.168.1.1:54321",
-            "services": "000000000000000d",
-            "servicesnames": ["NETWORK", "BLOOM", "WITNESS", "COMPACT_FILTERS"],
-            "lastsend": std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs(),
-            "lastrecv": std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs(),
-            "bytessent": 1024000,
-            "bytesrecv": 2048000,
-            "conntime": std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs() - 3600,
-            "timeoffset": 0,
-            "pingtime": 0.05,
-            "minping": 0.03,
-            "version": 70016,
-            "subver": "/SilverBitcoin:2.5.3/",
-            "inbound": false,
-            "addnode": false,
-            "startingheight": s.block_count,
-            "banscore": 0,
-            "synced_headers": s.block_count,
-            "synced_blocks": s.block_count,
-            "inflight": [],
-            "whitelisted": false,
-            "permissions": [],
-            "minfeefilter": 0.00001,
-            "bytessent_per_msg": {},
-            "bytesrecv_per_msg": {},
-        }),
-    ];
+    let peers = vec![json!({
+        "id": 1,
+        "addr": "192.168.1.100:8333",
+        "addrlocal": "192.168.1.1:54321",
+        "services": "000000000000000d",
+        "servicesnames": ["NETWORK", "BLOOM", "WITNESS", "COMPACT_FILTERS"],
+        "lastsend": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        "lastrecv": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs(),
+        "bytessent": 1024000,
+        "bytesrecv": 2048000,
+        "conntime": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() - 3600,
+        "timeoffset": 0,
+        "pingtime": 0.05,
+        "minping": 0.03,
+        "version": 70016,
+        "subver": "/SilverBitcoin:2.5.3/",
+        "inbound": false,
+        "addnode": false,
+        "startingheight": s.block_count,
+        "banscore": 0,
+        "synced_headers": s.block_count,
+        "synced_blocks": s.block_count,
+        "inflight": [],
+        "whitelisted": false,
+        "permissions": [],
+        "minfeefilter": 0.00001,
+        "bytessent_per_msg": {},
+        "bytesrecv_per_msg": {},
+    })];
     Ok(Value::Array(peers))
 }
 
@@ -1452,9 +1549,7 @@ async fn get_info(state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError
 }
 
 async fn estimate_fee(params: &[Value]) -> Result<Value, RpcError> {
-    let _blocks = params.get(0)
-        .and_then(|v| v.as_u64())
-        .unwrap_or(6);
+    let _blocks = params.first().and_then(|v| v.as_u64()).unwrap_or(6);
 
     match serde_json::Number::from_f64(0.00001) {
         Some(num) => Ok(Value::Number(num)),
@@ -1466,9 +1561,7 @@ async fn estimate_fee(params: &[Value]) -> Result<Value, RpcError> {
 }
 
 async fn estimate_smart_fee(params: &[Value]) -> Result<Value, RpcError> {
-    let _blocks = params.get(0)
-        .and_then(|v| v.as_u64())
-        .unwrap_or(6);
+    let _blocks = params.first().and_then(|v| v.as_u64()).unwrap_or(6);
 
     Ok(json!({
         "feerate": 0.00001,
@@ -1477,7 +1570,9 @@ async fn estimate_smart_fee(params: &[Value]) -> Result<Value, RpcError> {
 }
 
 async fn help(_params: &[Value]) -> Result<Value, RpcError> {
-    Ok(Value::String("SilverBitcoin RPC API - Production Grade Implementation".to_string()))
+    Ok(Value::String(
+        "SilverBitcoin RPC API - Production Grade Implementation".to_string(),
+    ))
 }
 
 async fn uptime(state: Arc<RwLock<BlockchainState>>) -> Result<Value, RpcError> {
@@ -1516,15 +1611,13 @@ async fn decode_hex_str(params: &[Value]) -> Result<Value, RpcError> {
     })?;
 
     match hex::decode(hex_str) {
-        Ok(bytes) => {
-            match String::from_utf8(bytes) {
-                Ok(string) => Ok(Value::String(string)),
-                Err(_) => Err(RpcError {
-                    code: -1,
-                    message: "Invalid UTF-8 in decoded hex".to_string(),
-                }),
-            }
-        }
+        Ok(bytes) => match String::from_utf8(bytes) {
+            Ok(string) => Ok(Value::String(string)),
+            Err(_) => Err(RpcError {
+                code: -1,
+                message: "Invalid UTF-8 in decoded hex".to_string(),
+            }),
+        },
         Err(_) => Err(RpcError {
             code: -1,
             message: "Invalid hex string".to_string(),

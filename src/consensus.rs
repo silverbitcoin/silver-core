@@ -8,7 +8,7 @@ use crate::{
     TransactionDigest,
 };
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use sha2::{Sha512, Digest};
+use sha2::{Digest, Sha512};
 use std::fmt;
 
 // Macro to implement Serialize/Deserialize for 64-byte array wrappers
@@ -440,8 +440,6 @@ impl Snapshot {
             stake_weight: 0,
         }
     }
-
-
 
     /// Compute the digest of this snapshot
     pub fn compute_digest(&self) -> SnapshotDigest {

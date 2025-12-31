@@ -45,11 +45,11 @@ impl Transaction {
         let mut hasher = sha2::Sha512::new();
         hasher.update(&serialized);
         let result = hasher.finalize();
-        
+
         // Convert to 64-byte array
         let mut output = [0u8; 64];
         output.copy_from_slice(&result[..]);
-        
+
         TransactionDigest::new(output)
     }
 
@@ -115,9 +115,7 @@ impl Transaction {
     /// Get commands from this transaction
     pub fn commands(&self) -> Vec<&Command> {
         match &self.data.kind {
-            TransactionKind::CompositeChain(commands) => {
-                commands.iter().collect()
-            }
+            TransactionKind::CompositeChain(commands) => commands.iter().collect(),
             TransactionKind::Genesis(_) => Vec::new(),
             TransactionKind::ConsensusCommit(_) => Vec::new(),
         }

@@ -6,14 +6,12 @@ use aes_gcm::{
     aead::{Aead, KeyInit, Payload},
     Aes256Gcm, Nonce,
 };
-use argon2::{
-    password_hash::SaltString, Algorithm, Argon2, Params, Version,
-};
+use argon2::{password_hash::SaltString, Algorithm, Argon2, Params, Version};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use sha2::{Sha512, Digest};
+use sha2::{Digest, Sha512};
 use std::collections::HashMap;
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 
 /// Wallet for managing addresses and keys
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,7 +58,10 @@ impl Wallet {
 
     /// Generate a new address in this wallet with encrypted private key
     /// PRODUCTION IMPLEMENTATION: 512-bit quantum-resistant keys and addresses using Blake3-512
-    pub fn generate_address(&mut self, label: Option<String>) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn generate_address(
+        &mut self,
+        label: Option<String>,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         // PRODUCTION IMPLEMENTATION: Generate 512-bit (64-byte) random seed for quantum resistance
         let mut rng = rand::thread_rng();
         let mut seed = [0u8; 64];
@@ -72,36 +73,35 @@ impl Wallet {
         hasher.update(seed);
         let mut public_key_bytes = [0u8; 64];
         public_key_bytes.copy_from_slice(&hasher.finalize());
-        
+
         // PRODUCTION IMPLEMENTATION: Create 512-bit address from public key using Blake3-512
         let mut hasher = Sha512::new();
         hasher.update(public_key_bytes);
         let mut address_bytes = [0u8; 64];
         address_bytes.copy_from_slice(&hasher.finalize());
-        
+
         // Encode full 64-byte address as base58 with SLVR prefix
         // This produces 86-88 character addresses when base58 encoded
         let address = format!("SLVR{}", bs58::encode(&address_bytes).into_string());
 
         // PRODUCTION IMPLEMENTATION: AES-256-GCM encryption with Argon2 key derivation
         // This is the real, secure implementation for production use
-        
+
         // 1. Generate random 96-bit nonce (12 bytes) for AES-GCM
         let nonce_bytes: [u8; 12] = rng.gen();
         let nonce = Nonce::from_slice(&nonce_bytes);
-        
+
         // 2. Generate random salt for Argon2 (16 bytes)
         let salt = SaltString::generate(&mut rng);
-        
+
         // 3. Derive encryption key from wallet password using Argon2
         // Using strong parameters: 19 MiB memory, 2 iterations, 4 parallelism
         let argon2 = Argon2::new(
             Algorithm::Argon2id,
             Version::V0x13,
-            Params::new(19456, 2, 4, None)
-                .map_err(|e| format!("Argon2 params error: {}", e))?,
+            Params::new(19456, 2, 4, None).map_err(|e| format!("Argon2 params error: {}", e))?,
         );
-        
+
         let password = match Self::get_password_from_user() {
             Ok(pwd) => pwd.into_bytes(),
             Err(e) => {
@@ -109,40 +109,42 @@ impl Wallet {
                 return Err(format!("Password required for address generation: {}", e).into());
             }
         };
-        
+
         // Hash the password using Argon2
         use argon2::PasswordHasher;
         let password_hash = argon2
             .hash_password(password.as_slice(), &salt)
             .map_err(|e| format!("Argon2 hashing failed: {}", e))?;
-        
+
         // Extract the hash bytes (first 32 bytes for AES-256)
-        let hash_str = password_hash.hash.ok_or("Failed to generate password hash")?;
+        let hash_str = password_hash
+            .hash
+            .ok_or("Failed to generate password hash")?;
         let hash_bytes = hash_str.as_bytes();
-        
+
         // Create 32-byte key from hash
         let mut key_bytes = [0u8; 32];
         key_bytes.copy_from_slice(&hash_bytes[..32.min(hash_bytes.len())]);
-        
+
         // 4. Encrypt 512-bit private key using AES-256-GCM
         let cipher = Aes256Gcm::new_from_slice(&key_bytes)
             .map_err(|e| format!("AES-256 key initialization failed: {}", e))?;
-        
+
         // Encrypt the 512-bit seed with additional authenticated data (AAD) for integrity
         let aad = Payload {
             msg: address.as_bytes(),
             aad: &public_key_bytes,
         };
-        
+
         let encrypted_seed = cipher
             .encrypt(nonce, aad)
             .map_err(|e| format!("AES-256-GCM encryption failed: {}", e))?;
-        
+
         // 5. Store encrypted key, nonce, and salt - PRODUCTION IMPLEMENTATION
         let encrypted_hex = hex::encode(&encrypted_seed);
         let nonce_hex = hex::encode(nonce_bytes);
         let salt_hex = hex::encode(salt.as_str().as_bytes());
-        
+
         // Combine nonce and salt in storage for decryption later
         let encryption_metadata = format!("{}:{}", nonce_hex, salt_hex);
 
@@ -166,7 +168,10 @@ impl Wallet {
             self.default_address = Some(address.clone());
         }
 
-        info!("✅ Generated new 512-bit address: {} (AES-256-GCM encryption)", address);
+        info!(
+            "✅ Generated new 512-bit address: {} (AES-256-GCM encryption)",
+            address
+        );
         debug!("Address encryption: Argon2id + AES-256-GCM with 96-bit nonce");
 
         Ok(address)
@@ -258,7 +263,7 @@ impl Wallet {
     /// NEVER falls back to random password generation - requires explicit password
     fn get_password_from_user() -> Result<String, Box<dyn std::error::Error>> {
         use std::io::{self, Write};
-        
+
         // PRODUCTION: Try to use rpassword crate for secure password input (no echo)
         // This is the preferred method for interactive password input
         #[cfg(not(test))]
@@ -280,25 +285,21 @@ impl Wallet {
             #[cfg(unix)]
             {
                 use std::process::Command;
-                
+
                 print!("Enter wallet password (min 12 chars): ");
                 io::stdout().flush().ok();
-                
+
                 // Disable echo using stty
-                let _ = Command::new("stty")
-                    .args(["-echo"])
-                    .output();
-                
+                let _ = Command::new("stty").args(["-echo"]).output();
+
                 let mut password = String::new();
                 let result = io::stdin().read_line(&mut password);
-                
+
                 // Re-enable echo
-                let _ = Command::new("stty")
-                    .args(["echo"])
-                    .output();
-                
+                let _ = Command::new("stty").args(["echo"]).output();
+
                 println!(); // New line after password input
-                
+
                 if result.is_ok() {
                     let pwd = password.trim().to_string();
                     if pwd.is_empty() {
@@ -317,7 +318,7 @@ impl Wallet {
             {
                 print!("Enter wallet password (min 12 chars): ");
                 io::stdout().flush().ok();
-                
+
                 let mut password = String::new();
                 if io::stdin().read_line(&mut password).is_ok() {
                     let pwd = password.trim().to_string();
@@ -333,37 +334,37 @@ impl Wallet {
             }
         }
 
-        // PRODUCTION-GRADE: Proper error handling for password input
-        // In production, password must be provided through secure input method
-        // This ensures no test-specific code paths in production
-        Err("Failed to read password from user - no input method available. Use secure password input method.".into())
+        // PRODUCTION IMPLEMENTATION: All input methods exhausted
+        // Return error with proper context for caller to handle
+        error!("No secure password input method available on this platform");
+        Err("Password input failed: no secure input method available. Ensure stdin is connected or use environment variable WALLET_PASSWORD.".into())
     }
 
     /// PRODUCTION IMPLEMENTATION: Validate password strength
     /// Ensures passwords meet minimum security requirements
     fn validate_password_strength(password: &str) -> Result<(), Box<dyn std::error::Error>> {
         // Minimum length already checked (12 chars)
-        
+
         // Check for at least one uppercase letter
         if !password.chars().any(|c| c.is_uppercase()) {
             return Err("Password must contain at least one uppercase letter".into());
         }
-        
+
         // Check for at least one lowercase letter
         if !password.chars().any(|c| c.is_lowercase()) {
             return Err("Password must contain at least one lowercase letter".into());
         }
-        
+
         // Check for at least one digit
         if !password.chars().any(|c| c.is_numeric()) {
             return Err("Password must contain at least one digit".into());
         }
-        
+
         // Check for at least one special character
         if !password.chars().any(|c| !c.is_alphanumeric()) {
             return Err("Password must contain at least one special character".into());
         }
-        
+
         // Check for common weak patterns
         let weak_patterns = ["password", "123456", "qwerty", "admin", "letmein"];
         for pattern in &weak_patterns {
@@ -371,7 +372,7 @@ impl Wallet {
                 return Err(format!("Password contains weak pattern: {}", pattern).into());
             }
         }
-        
+
         Ok(())
     }
 }
@@ -384,7 +385,7 @@ impl AddressGenerator {
     /// PRODUCTION IMPLEMENTATION: 512-bit quantum-resistant keys and addresses
     pub fn generate() -> Result<(String, String, String), Box<dyn std::error::Error>> {
         let mut rng = rand::thread_rng();
-        
+
         // PRODUCTION IMPLEMENTATION: Generate 512-bit (64-byte) random seed for quantum resistance
         let mut seed = [0u8; 64];
         rng.fill(&mut seed);
@@ -394,74 +395,75 @@ impl AddressGenerator {
         hasher.update(seed);
         let mut public_key_bytes = [0u8; 64];
         public_key_bytes.copy_from_slice(&hasher.finalize());
-        
+
         // PRODUCTION IMPLEMENTATION: Create 512-bit address using Blake3-512
         let mut hasher = Sha512::new();
         hasher.update(public_key_bytes);
         let mut address_bytes = [0u8; 64];
         address_bytes.copy_from_slice(&hasher.finalize());
-        
+
         let address = format!("SLVR{}", bs58::encode(&address_bytes).into_string());
 
         // PRODUCTION IMPLEMENTATION: Real AES-256-GCM encryption for 512-bit private key
         // Generate random 96-bit nonce for AES-GCM
         let nonce_bytes: [u8; 12] = rng.gen();
         let nonce = Nonce::from_slice(&nonce_bytes);
-        
+
         // Generate random salt for Argon2
         let salt = SaltString::generate(&mut rng);
-        
+
         // Derive encryption key using Argon2id
         let argon2 = Argon2::new(
             Algorithm::Argon2id,
             Version::V0x13,
-            Params::new(19456, 2, 4, None)
-                .map_err(|e| format!("Argon2 params error: {}", e))?,
+            Params::new(19456, 2, 4, None).map_err(|e| format!("Argon2 params error: {}", e))?,
         );
-        
+
         let password = std::env::var("WALLET_PASSWORD")
-            .map_err(|_| "WALLET_PASSWORD environment variable not set. Set it before generating addresses.")?
+            .map_err(|_| {
+                "WALLET_PASSWORD environment variable not set. Set it before generating addresses."
+            })?
             .into_bytes();
-        
+
         if password.len() < 12 {
             return Err("WALLET_PASSWORD must be at least 12 characters".into());
         }
-        
+
         use argon2::PasswordHasher;
         let password_hash = argon2
             .hash_password(password.as_slice(), &salt)
             .map_err(|e| format!("Argon2 hashing failed: {}", e))?;
-        
-        let hash_str = password_hash.hash.ok_or("Failed to generate password hash")?;
+
+        let hash_str = password_hash
+            .hash
+            .ok_or("Failed to generate password hash")?;
         let hash_bytes = hash_str.as_bytes();
-        
+
         let mut key_bytes = [0u8; 32];
         key_bytes.copy_from_slice(&hash_bytes[..32.min(hash_bytes.len())]);
-        
+
         // Encrypt 512-bit seed with AES-256-GCM
         let cipher = Aes256Gcm::new_from_slice(&key_bytes)
             .map_err(|e| format!("AES-256 key initialization failed: {}", e))?;
-        
+
         let aad = Payload {
             msg: address.as_bytes(),
             aad: &public_key_bytes,
         };
-        
+
         let encrypted_seed = cipher
             .encrypt(nonce, aad)
             .map_err(|e| format!("AES-256-GCM encryption failed: {}", e))?;
-        
+
         let encrypted_hex = hex::encode(&encrypted_seed);
 
-        Ok((
-            address,
-            hex::encode(public_key_bytes),
-            encrypted_hex,
-        ))
+        Ok((address, hex::encode(public_key_bytes), encrypted_hex))
     }
 
     /// Generate multiple addresses with encrypted private keys
-    pub fn generate_batch(count: usize) -> Result<Vec<(String, String, String)>, Box<dyn std::error::Error>> {
+    pub fn generate_batch(
+        count: usize,
+    ) -> Result<Vec<(String, String, String)>, Box<dyn std::error::Error>> {
         let mut addresses = Vec::new();
         for _ in 0..count {
             addresses.push(Self::generate()?);
@@ -519,7 +521,9 @@ mod tests {
         let mut wallet = Wallet::new("test_wallet".to_string());
 
         for i in 0..5 {
-            let address = wallet.generate_address(Some(format!("Address {}", i))).unwrap();
+            let address = wallet
+                .generate_address(Some(format!("Address {}", i)))
+                .unwrap();
             assert!(address.starts_with("SLVR"));
         }
 
@@ -556,7 +560,7 @@ mod tests {
 
         assert!(address.starts_with("SLVR"));
         assert_eq!(public_key.len(), 128); // 64 bytes (512-bit) = 128 hex chars for SHA-512
-        // Private key is encrypted, so it's longer than 128 bytes
+                                           // Private key is encrypted, so it's longer than 128 bytes
         assert!(private_key.len() > 128);
     }
 

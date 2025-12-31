@@ -199,7 +199,9 @@ impl TokenState {
         }
 
         if amount == 0 {
-            return Err(Error::InvalidData("Transfer amount must be greater than 0".to_string()));
+            return Err(Error::InvalidData(
+                "Transfer amount must be greater than 0".to_string(),
+            ));
         }
 
         let from_balance = self.balance_of(from);
@@ -231,7 +233,9 @@ impl TokenState {
         }
 
         if amount == 0 {
-            return Err(Error::InvalidData("Transfer amount must be greater than 0".to_string()));
+            return Err(Error::InvalidData(
+                "Transfer amount must be greater than 0".to_string(),
+            ));
         }
 
         // Check allowance
@@ -288,7 +292,9 @@ impl TokenState {
         }
 
         if amount == 0 {
-            return Err(Error::InvalidData("Mint amount must be greater than 0".to_string()));
+            return Err(Error::InvalidData(
+                "Mint amount must be greater than 0".to_string(),
+            ));
         }
 
         // Check for overflow
@@ -320,7 +326,9 @@ impl TokenState {
         }
 
         if amount == 0 {
-            return Err(Error::InvalidData("Burn amount must be greater than 0".to_string()));
+            return Err(Error::InvalidData(
+                "Burn amount must be greater than 0".to_string(),
+            ));
         }
 
         let from_balance = self.balance_of(from);
@@ -394,7 +402,10 @@ mod tests {
 
         assert_eq!(state.metadata.name, "Test Token");
         assert_eq!(state.metadata.symbol, "TEST");
-        assert_eq!(state.balance_of(&creator), 1_000_000_000_000_000_000_000u128);
+        assert_eq!(
+            state.balance_of(&creator),
+            1_000_000_000_000_000_000_000u128
+        );
     }
 
     #[test]
@@ -413,7 +424,10 @@ mod tests {
         );
 
         state.transfer(&creator, &recipient, 100).unwrap();
-        assert_eq!(state.balance_of(&creator), 1_000_000_000_000_000_000_000u128 - 100);
+        assert_eq!(
+            state.balance_of(&creator),
+            1_000_000_000_000_000_000_000u128 - 100
+        );
         assert_eq!(state.balance_of(&recipient), 100);
     }
 

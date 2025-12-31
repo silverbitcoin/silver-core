@@ -4,7 +4,7 @@
 //! providing quantum resistance and collision resistance.
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use sha2::{Sha512, Digest};
+use sha2::{Digest, Sha512};
 use std::fmt;
 
 /// 512-bit quantum-resistant address derived from public keys using Blake3-512

@@ -4,7 +4,7 @@
 
 use crate::{Error, Result, Signature, SilverAddress, SnapshotDigest};
 use serde::{Deserialize, Serialize};
-use sha2::{Sha512, Digest};
+use sha2::{Digest, Sha512};
 use std::fmt;
 
 /// Protocol version structure

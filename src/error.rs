@@ -52,6 +52,10 @@ pub enum Error {
     /// Invalid block
     #[error("Invalid block: {0}")]
     InvalidBlock(String),
+
+    /// Lock error (mutex poisoning)
+    #[error("Lock error: {0}")]
+    LockError(String),
 }
 
 /// Result type alias

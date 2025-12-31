@@ -33,11 +33,7 @@ impl AccountBalance {
     ///
     /// # Returns
     /// A new AccountBalance instance
-    pub fn new(
-        address: SilverAddress,
-        balance_mist: u128,
-        current_time_seconds: u64,
-    ) -> Self {
+    pub fn new(address: SilverAddress, balance_mist: u128, current_time_seconds: u64) -> Self {
         Self {
             address,
             total_balance_mist: balance_mist,
@@ -187,23 +183,28 @@ mod tests {
     use super::*;
     use crate::SilverAddress;
 
+    /// Generate a test address using SHA-512 hash of a seed
+    fn generate_test_address(seed: &str) -> SilverAddress {
+        use sha2::{Digest, Sha512};
+        let mut hasher = Sha512::new();
+        hasher.update(seed.as_bytes());
+        let result = hasher.finalize();
+        let hex = format!("{:x}", result);
+        SilverAddress::from_hex(&hex).map_err(|e| format!("Failed to create test address: {}", e))?
+    }
+
     #[test]
     fn test_account_balance_creation() {
-        let addr = SilverAddress::from_hex(
-            "46c56dbc9b8169bfc189f9c13b61e46b1fea3ffd27a29c33224d03ef9ebfcb13f0b0391c2d3763479fe5608ba1848080d7e8debe9a8b9f0cc1a72e33af627d22"
-        ).unwrap();
-
-        let account = AccountBalance::new(addr, 1_000_000_000_000_000u128, 1000000u64);
+        let addr = generate_test_address("test_account_1");
+        let account = AccountBalance::new(addr.clone(), 1_000_000_000_000_000u128, 1000000u64);
         assert_eq!(account.total_balance_mist, 1_000_000_000_000_000u128);
         assert_eq!(account.nonce, 0);
+        assert_eq!(account.address, addr);
     }
 
     #[test]
     fn test_transfer() {
-        let addr = SilverAddress::from_hex(
-            "46c56dbc9b8169bfc189f9c13b61e46b1fea3ffd27a29c33224d03ef9ebfcb13f0b0391c2d3763479fe5608ba1848080d7e8debe9a8b9f0cc1a72e33af627d22"
-        ).unwrap();
-
+        let addr = generate_test_address("test_transfer_1");
         let mut account = AccountBalance::new(addr, 1_000_000_000_000_000u128, 1000000u64);
 
         let result = account.transfer(100_000_000_000_000u128, 1000000u64);
@@ -212,11 +213,18 @@ mod tests {
     }
 
     #[test]
-    fn test_receive() {
-        let addr = SilverAddress::from_hex(
-            "46c56dbc9b8169bfc189f9c13b61e46b1fea3ffd27a29c33224d03ef9ebfcb13f0b0391c2d3763479fe5608ba1848080d7e8debe9a8b9f0cc1a72e33af627d22"
-        ).unwrap();
+    fn test_transfer_insufficient_balance() {
+        let addr = generate_test_address("test_transfer_insufficient");
+        let mut account = AccountBalance::new(addr, 100_000_000u128, 1000000u64);
 
+        let result = account.transfer(200_000_000u128, 1000000u64);
+        assert!(result.is_err());
+        assert_eq!(account.total_balance_mist, 100_000_000u128);
+    }
+
+    #[test]
+    fn test_receive() {
+        let addr = generate_test_address("test_receive_1");
         let mut account = AccountBalance::new(addr, 1_000_000_000_000_000u128, 1000000u64);
         account.receive(500_000_000_000_000u128, 1000000u64);
         assert_eq!(account.total_balance_mist, 1_500_000_000_000_000u128);
@@ -224,13 +232,52 @@ mod tests {
 
     #[test]
     fn test_nonce_increment() {
-        let addr = SilverAddress::from_hex(
-            "46c56dbc9b8169bfc189f9c13b61e46b1fea3ffd27a29c33224d03ef9ebfcb13f0b0391c2d3763479fe5608ba1848080d7e8debe9a8b9f0cc1a72e33af627d22"
-        ).unwrap();
-
+        let addr = generate_test_address("test_nonce_1");
         let mut account = AccountBalance::new(addr, 1_000_000_000_000_000u128, 1000000u64);
         assert_eq!(account.nonce, 0);
         account.increment_nonce();
         assert_eq!(account.nonce, 1);
+        account.increment_nonce();
+        assert_eq!(account.nonce, 2);
+    }
+
+    #[test]
+    fn test_can_transfer() {
+        let addr = generate_test_address("test_can_transfer");
+        let account = AccountBalance::new(addr, 1_000_000u128, 1000000u64);
+        assert!(account.can_transfer(500_000u128));
+        assert!(account.can_transfer(1_000_000u128));
+        assert!(!account.can_transfer(1_000_001u128));
+    }
+
+    #[test]
+    fn test_account_store_operations() {
+        let mut store = AccountStore::new();
+        let addr1 = generate_test_address("store_test_1");
+        let addr2 = generate_test_address("store_test_2");
+
+        let account1 = AccountBalance::new(addr1.clone(), 500_000_000u128, 1000000u64);
+        let account2 = AccountBalance::new(addr2.clone(), 300_000_000u128, 1000000u64);
+
+        assert!(store.add_account(account1).is_ok());
+        assert!(store.add_account(account2).is_ok());
+
+        assert!(store.get_account(&addr1).is_some());
+        assert!(store.get_account(&addr2).is_some());
+
+        let total = store.get_total_balance();
+        assert_eq!(total, 800_000_000u128);
+    }
+
+    #[test]
+    fn test_account_store_duplicate_prevention() {
+        let mut store = AccountStore::new();
+        let addr = generate_test_address("duplicate_test");
+
+        let account1 = AccountBalance::new(addr.clone(), 500_000_000u128, 1000000u64);
+        let account2 = AccountBalance::new(addr.clone(), 300_000_000u128, 1000000u64);
+
+        assert!(store.add_account(account1).is_ok());
+        assert!(store.add_account(account2).is_err());
     }
 }

@@ -1,6 +1,6 @@
 //! Explorer Integration - Production-Grade REAL IMPLEMENTATION
 //!
-//! FULL PRODUCTION IMPLEMENTATION 
+//! FULL PRODUCTION IMPLEMENTATION
 //! Connects explorer frontend to storage stores for REAL blockchain data
 //! All methods query ParityDB directly for actual blockchain information
 //!
@@ -13,8 +13,8 @@
 //! - Advanced search and filtering with AdvancedIndexManager
 
 use serde_json::{json, Value};
-use tracing::{debug, info};
 use std::sync::Arc;
+use tracing::{debug, info};
 
 /// Explorer Error type
 #[derive(Debug, Clone)]
@@ -33,7 +33,10 @@ impl std::fmt::Display for ExplorerError {
 
 /// Helper to log store usage
 fn log_store_usage(store_name: &str, operation: &str, details: &str) {
-    info!("Store[{}] Operation[{}] Details[{}]", store_name, operation, details);
+    info!(
+        "Store[{}] Operation[{}] Details[{}]",
+        store_name, operation, details
+    );
 }
 
 // ============================================================================
@@ -49,9 +52,12 @@ pub async fn get_block_details_real(
 
     // Use block_store for actual data retrieval
     log_store_usage("BlockStore", "get_block_details", height_or_hash);
-    
-    info!("Fetching block details for explorer from store: {}", height_or_hash);
-    
+
+    info!(
+        "Fetching block details for explorer from store: {}",
+        height_or_hash
+    );
+
     Ok(json!({
         "hash": "0000000000000000000000000000000000000000000000000000000000000000",
         "height": 0,
@@ -79,10 +85,14 @@ pub async fn get_recent_blocks_real(
     debug!("Getting recent blocks: limit={}", limit);
 
     // Use block_store for actual data retrieval
-    log_store_usage("BlockStore", "get_recent_blocks", &format!("limit={}", limit));
-    
+    log_store_usage(
+        "BlockStore",
+        "get_recent_blocks",
+        &format!("limit={}", limit),
+    );
+
     info!("Fetching recent blocks for explorer from store");
-    
+
     Ok(json!({
         "blocks": [],
         "count": 0,
@@ -98,9 +108,9 @@ pub async fn get_block_stats_real(
 
     // Use block_store for actual data retrieval
     log_store_usage("BlockStore", "get_block_stats", "");
-    
+
     info!("Fetching block statistics for explorer from store");
-    
+
     Ok(json!({
         "total_blocks": 0,
         "total_transactions": 0,
@@ -124,9 +134,12 @@ pub async fn get_transaction_details_real(
 
     // Use transaction_store for actual data retrieval
     log_store_usage("TransactionStore", "get_transaction_details", txid);
-    
-    info!("Fetching transaction details for explorer from store: {}", txid);
-    
+
+    info!(
+        "Fetching transaction details for explorer from store: {}",
+        txid
+    );
+
     Ok(json!({
         "txid": txid,
         "hash": txid,
@@ -155,10 +168,14 @@ pub async fn get_recent_transactions_real(
     debug!("Getting recent transactions: limit={}", limit);
 
     // Use transaction_store for actual data retrieval
-    log_store_usage("TransactionStore", "get_recent_transactions", &format!("limit={}", limit));
-    
+    log_store_usage(
+        "TransactionStore",
+        "get_recent_transactions",
+        &format!("limit={}", limit),
+    );
+
     info!("Fetching recent transactions for explorer from store");
-    
+
     Ok(json!({
         "transactions": [],
         "count": 0,
@@ -174,9 +191,9 @@ pub async fn get_transaction_stats_real(
 
     // Use transaction_store for actual data retrieval
     log_store_usage("TransactionStore", "get_transaction_stats", "");
-    
+
     info!("Fetching transaction statistics for explorer from store");
-    
+
     Ok(json!({
         "total_transactions": 0,
         "total_volume": "0",
@@ -200,9 +217,12 @@ pub async fn get_address_details_real(
 
     // Use address_store for actual data retrieval
     log_store_usage("AddressStore", "get_address_details", address);
-    
-    info!("Fetching address details for explorer from store: {}", address);
-    
+
+    info!(
+        "Fetching address details for explorer from store: {}",
+        address
+    );
+
     Ok(json!({
         "address": address,
         "balance": "0",
@@ -225,13 +245,23 @@ pub async fn get_address_transactions_real(
     page: u32,
     page_size: u32,
 ) -> Result<Value, ExplorerError> {
-    debug!("Getting address transactions: {}, page={}, page_size={}", address, page, page_size);
+    debug!(
+        "Getting address transactions: {}, page={}, page_size={}",
+        address, page, page_size
+    );
 
     // Use transaction_store for actual data retrieval
-    log_store_usage("TransactionStore", "get_address_transactions", &format!("addr={}, page={}, page_size={}", address, page, page_size));
-    
-    info!("Fetching address transactions for explorer from store: {}", address);
-    
+    log_store_usage(
+        "TransactionStore",
+        "get_address_transactions",
+        &format!("addr={}, page={}, page_size={}", address, page, page_size),
+    );
+
+    info!(
+        "Fetching address transactions for explorer from store: {}",
+        address
+    );
+
     Ok(json!({
         "address": address,
         "transactions": [],
@@ -250,9 +280,12 @@ pub async fn get_address_utxos_real(
 
     // Use utxo_store for actual data retrieval
     log_store_usage("UTXOStore", "get_address_utxos", address);
-    
-    info!("Fetching address UTXOs for explorer from store: {}", address);
-    
+
+    info!(
+        "Fetching address UTXOs for explorer from store: {}",
+        address
+    );
+
     Ok(json!({
         "address": address,
         "utxos": [],
@@ -273,10 +306,17 @@ pub async fn get_event_details_real(
     debug!("Getting event details: {}", event_id);
 
     // Use event_store for actual data retrieval
-    log_store_usage("EventStorePersistent", "get_event_details", &format!("event_id={}", event_id));
-    
-    info!("Fetching event details for explorer from store: {}", event_id);
-    
+    log_store_usage(
+        "EventStorePersistent",
+        "get_event_details",
+        &format!("event_id={}", event_id),
+    );
+
+    info!(
+        "Fetching event details for explorer from store: {}",
+        event_id
+    );
+
     Ok(json!({
         "event_id": event_id,
         "transaction_digest": "",
@@ -296,10 +336,14 @@ pub async fn get_recent_events_real(
     debug!("Getting recent events: limit={}", limit);
 
     // Use event_store for actual data retrieval
-    log_store_usage("EventStorePersistent", "get_recent_events", &format!("limit={}", limit));
-    
+    log_store_usage(
+        "EventStorePersistent",
+        "get_recent_events",
+        &format!("limit={}", limit),
+    );
+
     info!("Fetching recent events for explorer from store");
-    
+
     Ok(json!({
         "events": [],
         "count": 0,
@@ -314,13 +358,26 @@ pub async fn get_events_by_type_real(
     page: u32,
     page_size: u32,
 ) -> Result<Value, ExplorerError> {
-    debug!("Getting events by type: {}, page={}, page_size={}", event_type, page, page_size);
+    debug!(
+        "Getting events by type: {}, page={}, page_size={}",
+        event_type, page, page_size
+    );
 
     // Use event_store for actual data retrieval
-    log_store_usage("EventStorePersistent", "get_events_by_type", &format!("type={}, page={}, page_size={}", event_type, page, page_size));
-    
-    info!("Fetching events by type for explorer from store: {}", event_type);
-    
+    log_store_usage(
+        "EventStorePersistent",
+        "get_events_by_type",
+        &format!(
+            "type={}, page={}, page_size={}",
+            event_type, page, page_size
+        ),
+    );
+
+    info!(
+        "Fetching events by type for explorer from store: {}",
+        event_type
+    );
+
     Ok(json!({
         "event_type": event_type,
         "events": [],
@@ -342,10 +399,17 @@ pub async fn get_token_details_real(
     debug!("Getting token details: {}", contract_address);
 
     // Use token_store for actual data retrieval
-    log_store_usage("TokenStorePersistent", "get_token_details", contract_address);
-    
-    info!("Fetching token details for explorer from store: {}", contract_address);
-    
+    log_store_usage(
+        "TokenStorePersistent",
+        "get_token_details",
+        contract_address,
+    );
+
+    info!(
+        "Fetching token details for explorer from store: {}",
+        contract_address
+    );
+
     Ok(json!({
         "contract_address": contract_address,
         "name": "",
@@ -366,13 +430,26 @@ pub async fn get_token_holders_real(
     page: u32,
     page_size: u32,
 ) -> Result<Value, ExplorerError> {
-    debug!("Getting token holders: {}, page={}, page_size={}", contract_address, page, page_size);
+    debug!(
+        "Getting token holders: {}, page={}, page_size={}",
+        contract_address, page, page_size
+    );
 
     // Use token_store for actual data retrieval
-    log_store_usage("TokenStorePersistent", "get_token_holders", &format!("contract={}, page={}, page_size={}", contract_address, page, page_size));
-    
-    info!("Fetching token holders for explorer from store: {}", contract_address);
-    
+    log_store_usage(
+        "TokenStorePersistent",
+        "get_token_holders",
+        &format!(
+            "contract={}, page={}, page_size={}",
+            contract_address, page, page_size
+        ),
+    );
+
+    info!(
+        "Fetching token holders for explorer from store: {}",
+        contract_address
+    );
+
     Ok(json!({
         "contract_address": contract_address,
         "holders": [],
@@ -389,13 +466,26 @@ pub async fn get_token_transfers_real(
     page: u32,
     page_size: u32,
 ) -> Result<Value, ExplorerError> {
-    debug!("Getting token transfers: {}, page={}, page_size={}", contract_address, page, page_size);
+    debug!(
+        "Getting token transfers: {}, page={}, page_size={}",
+        contract_address, page, page_size
+    );
 
     // Use token_store for actual data retrieval
-    log_store_usage("TokenStorePersistent", "get_token_transfers", &format!("contract={}, page={}, page_size={}", contract_address, page, page_size));
-    
-    info!("Fetching token transfers for explorer from store: {}", contract_address);
-    
+    log_store_usage(
+        "TokenStorePersistent",
+        "get_token_transfers",
+        &format!(
+            "contract={}, page={}, page_size={}",
+            contract_address, page, page_size
+        ),
+    );
+
+    info!(
+        "Fetching token transfers for explorer from store: {}",
+        contract_address
+    );
+
     Ok(json!({
         "contract_address": contract_address,
         "transfers": [],
@@ -414,10 +504,14 @@ pub async fn get_all_tokens_real(
     debug!("Getting all tokens: page={}, page_size={}", page, page_size);
 
     // Use token_store for actual data retrieval
-    log_store_usage("TokenStorePersistent", "get_all_tokens", &format!("page={}, page_size={}", page, page_size));
-    
+    log_store_usage(
+        "TokenStorePersistent",
+        "get_all_tokens",
+        &format!("page={}, page_size={}", page, page_size),
+    );
+
     info!("Fetching all tokens for explorer from store");
-    
+
     Ok(json!({
         "tokens": [],
         "page": page,
@@ -445,9 +539,9 @@ pub async fn search_real(
     log_store_usage("TransactionStore", "search", query);
     log_store_usage("AddressStore", "search", query);
     log_store_usage("TokenStorePersistent", "search", query);
-    
+
     info!("Performing search for explorer from stores: {}", query);
-    
+
     Ok(json!({
         "query": query,
         "results": {
@@ -464,7 +558,7 @@ pub async fn get_search_filters_real() -> Result<Value, ExplorerError> {
     debug!("Getting search filters");
 
     info!("Fetching search filters for explorer");
-    
+
     Ok(json!({
         "block_filters": {
             "height_range": true,
@@ -506,9 +600,9 @@ pub async fn get_blockchain_stats_real(
     log_store_usage("BlockStore", "get_stats", "");
     log_store_usage("TransactionStore", "get_stats", "");
     log_store_usage("MempoolStore", "get_stats", "");
-    
+
     info!("Fetching blockchain statistics for explorer from stores");
-    
+
     Ok(json!({
         "total_blocks": 0,
         "total_transactions": 0,
@@ -529,7 +623,7 @@ pub async fn get_market_data_real() -> Result<Value, ExplorerError> {
     debug!("Getting market data");
 
     info!("Fetching market data for explorer");
-    
+
     Ok(json!({
         "price_usd": 0.0,
         "price_change_24h": 0.0,
@@ -548,9 +642,9 @@ pub async fn get_network_stats_real(
 
     // Use network_store for actual data retrieval
     log_store_usage("NetworkStore", "get_network_stats", "");
-    
+
     info!("Fetching network statistics for explorer from store");
-    
+
     Ok(json!({
         "peers": 0,
         "connections": 0,

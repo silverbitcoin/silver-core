@@ -461,8 +461,9 @@ mod tests {
             warnings: String::new(),
         };
 
-        let json = serde_json::to_string(&info).unwrap();
-        let deserialized: BlockchainInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&info).map_err(|e| format!("Failed to serialize BlockchainInfo: {}", e))?;
+        let deserialized: BlockchainInfo =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize BlockchainInfo: {}", e))?;
         assert_eq!(info.blocks, deserialized.blocks);
     }
 
@@ -492,8 +493,9 @@ mod tests {
             reward: 50_000_000_000,
         };
 
-        let json = serde_json::to_string(&block).unwrap();
-        let deserialized: BlockData = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&block).map_err(|e| format!("Failed to serialize BlockData: {}", e))?;
+        let deserialized: BlockData =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize BlockData: {}", e))?;
         assert_eq!(block.height, deserialized.height);
         assert_eq!(block.miner, deserialized.miner);
     }
@@ -527,8 +529,9 @@ mod tests {
             hex: "0100000001".to_string(),
         };
 
-        let json = serde_json::to_string(&tx).unwrap();
-        let deserialized: TransactionData = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&tx).map_err(|e| format!("Failed to serialize TransactionData: {}", e))?;
+        let deserialized: TransactionData =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize TransactionData: {}", e))?;
         assert_eq!(tx.txid, deserialized.txid);
         assert_eq!(tx.generated, deserialized.generated);
     }
@@ -565,8 +568,9 @@ mod tests {
             last_block_time: 1234567890,
         };
 
-        let json = serde_json::to_string(&addr).unwrap();
-        let deserialized: AddressData = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&addr).map_err(|e| format!("Failed to serialize AddressData: {}", e))?;
+        let deserialized: AddressData =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize AddressData: {}", e))?;
         assert_eq!(addr.address, deserialized.address);
         assert_eq!(addr.blocks_mined, deserialized.blocks_mined);
     }
@@ -586,8 +590,9 @@ mod tests {
             last_updated: 1234567890,
         };
 
-        let json = serde_json::to_string(&balance).unwrap();
-        let deserialized: AccountBalance = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&balance).map_err(|e| format!("Failed to serialize AccountBalance: {}", e))?;
+        let deserialized: AccountBalance =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize AccountBalance: {}", e))?;
         assert_eq!(balance.balance_mist, deserialized.balance_mist);
     }
 
@@ -612,8 +617,9 @@ mod tests {
             total_reward: 5_000_000_000_000,
         };
 
-        let json = serde_json::to_string(&mining).unwrap();
-        let deserialized: MiningInfo = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(&mining).map_err(|e| format!("Failed to serialize MiningInfo: {}", e))?;
+        let deserialized: MiningInfo =
+            serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize MiningInfo: {}", e))?;
         assert_eq!(mining.blocks, deserialized.blocks);
         assert_eq!(mining.blocks_found, deserialized.blocks_found);
     }

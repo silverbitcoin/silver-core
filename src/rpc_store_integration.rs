@@ -11,9 +11,9 @@
 //! - Wallet operations with real storage
 //! - Transaction broadcasting with mempool
 
+use serde_json::{json, Value};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use serde_json::{json, Value};
 use tracing::{debug, info};
 
 /// RPC Store Context - holds references to all storage layers
